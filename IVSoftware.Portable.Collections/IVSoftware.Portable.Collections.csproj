@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Title>IVSoftware.Portable.Collections</Title>
+		<PackageId>IVSoftware.Portable.Collections</PackageId>
+		<RootNamespace>IVSoftware.Portable.Collections</RootNamespace>
+		<Description>Cross-platform collection primitives and extensions for predictable iteration, key safety, and event-aware updates. Designed for use across IVSoftware’s Portable suite.</Description>
+		<PackageTags>collections;portable;cross-platform;dictionary;observable;netstandard</PackageTags>
+		<RepositoryUrl>https://github.com/IVSoftware/IVSoftware.Portable.Collections.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/IVSoftware/IVSoftware.Portable.Collections.git</PackageProjectUrl>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Author>Thomas C. Gregor</Author>
+		<Owner>IVSoftware LLC</Owner>
+		<Copyright>Copyright © 2025 IVSoftware LLC</Copyright>
+		<FileVersion>$(AssemblyVersion)</FileVersion>
+		<Version>$(AssemblyVersion)</Version>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+
+		<PackageReleaseNotes>
+			Initial 1.0.0 release
+			- Intended for general use, but with some inclination to supporting type exchange abstraction patterns.
+		</PackageReleaseNotes>
+
+		<AssemblyOriginatorKeyFile>D:\PFX\231201.ivs.pfx</AssemblyOriginatorKeyFile>
+		<DebugType>embedded</DebugType>
+		<BaseVersion>1.0.0</BaseVersion>
+		<VersionPrefix>$(BaseVersion)-local1</VersionPrefix>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<SignAssembly>True</SignAssembly>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="README\**" />
+		<EmbeddedResource Remove="README\**" />
+		<None Remove="README\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Include="README\opc-advanced.md" />
+		<None Include="README\extensions.md" />
+		<None Include="README\throw-patterns-and-advisory.md" />
+		<None Include="README\blank.md" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="IVSoftware.Portable.Common" Version="1.0.0-beta" />
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0-*" />
+		<PackageReference Include="IVSoftware.Portable.Reconciler" Version="1.0.3" />
+		<PackageReference Include="IVSoftware.Portable.Xml.Linq.XBoundObject" Version="2.0.3" />
+		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="*-*" />
+	</ItemGroup>
+
+</Project>

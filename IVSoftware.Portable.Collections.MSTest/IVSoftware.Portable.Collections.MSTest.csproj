@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Single TFM. MAUI is NOT activated here. -->
+		<TargetFramework>net8.0-windows</TargetFramework>
+
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<!-- WinForms support (STA tests rely on this). -->
+		<UseWindowsForms>true</UseWindowsForms>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+		<!-- Do NOT set <UseMaui>true>. That would force the MAUI SDK. -->
+		<!-- Do NOT set <UseWPF>true> unless you actually need WPF runners. -->
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Bring in MAUI *type metadata* without MAUI workload activation. -->
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.0" />
+
+		<!-- IVSoftware packages. -->
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0-*" />
+		<PackageReference Include="IVSoftware.Portable.Threading" Version="2.0.0-*" />
+		<PackageReference Include="IVSoftware.WinOS.MSTest.Extensions" Version="1.0.8" />
+		<PackageReference Include="IVSoftware.WinOS.MSTest.Extensions.STA" Version="1.0.0-beta" />
+		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="*-*" />
+
+		<!-- The MSTest toolchain. -->
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+		<PackageReference Include="MSTest" Version="3.6.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\IVSoftware.Portable.Collections\IVSoftware.Portable.Collections.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+	</ItemGroup>
+
+</Project>

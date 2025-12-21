@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="FilteredList.Maui.Demo.MainPage"
+    xmlns:local="clr-namespace:FilteredList.Maui.Demo"
+    xmlns:ctl="clr-namespace:FilteredList.Maui.Demo.Controls"
+    xmlns:view="clr-namespace:FilteredList.Maui.Demo.Views"
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.BindingContext>
+        <local:MainPageBindingContext/>
+    </ContentPage.BindingContext>
+    <Grid
+        RowDefinitions="*,40">
+        <CollectionView
+            Grid.Row="0"
+            ItemsSource="{Binding ItemsSource}"
+            SelectionMode="{Binding SelectionMode}"            
+            BackgroundColor="Azure">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <view:ItemCard
+                PressedCommand="{Binding Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},
+                                         Path=ItemPressedCommand}"
+                ReleasedCommand="{Binding Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},
+                                          Path=ItemReleasedCommand}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Grid
+            ColumnDefinitions="*,Auto,*,Auto,*"
+            Grid.Row="1"
+            BackgroundColor="Black">
+            <ctl:GlyphToggleButton               
+                Grid.Column="1"
+                Margin="2"
+                StdIconName="{x:Static gp:GlyphProvider+IconBasics.Checked}" 
+                ToggleState="{Binding ShowChecked, Mode=TwoWay}"/>
+            <ctl:GlyphToggleButton
+                Grid.Column="3"
+                Margin="2"
+                StdIconName="{x:Static gp:GlyphProvider+IconBasics.Unchecked}"
+                ToggleState="{Binding ShowUnchecked, Mode=TwoWay}"/>
+            <!--
+            <ctl:GlyphButton
+                Grid.Column="5"
+                Margin="2"
+                StdIconName="{x:Static gp:GlyphProvider+IconBasics.EllipsisHorizontal}"/>
+            -->
+        </Grid>     
+    </Grid>
+</ContentPage>
