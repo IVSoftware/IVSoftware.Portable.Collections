@@ -249,17 +249,34 @@ namespace IVSoftware.Portable.Collections.FollowContexts
         {
             get
             {
-                if(_currentItemsDirty)
+                if (_currentItemsDirty)
                 {
                     var currentItemsVisible = new HashSet<T>(_owner.Cast<T>());
-                    var currentItems = new List<T>();
 
-                    _currentItems = CurrentItemsProtected.Where(_=>currentItemsVisible.Contains(_)).ToArray();
+                    var selected = new List<T>();
+                    var inverted = new List<T>();
+
+                    foreach (var item in currentItemsVisible)
+                    {
+                        if (CurrentItemsProtected.Contains(item))
+                        {
+                            selected.Add(item);
+                        }
+                        else
+                        {
+                            inverted.Add(item);
+                        }
+                    }
+
+                    _currentItems = selected.ToArray();
+                    _currentItemsInverted = inverted.ToArray();
+
                     _currentItemsDirty = false;
                 }
                 return _currentItems;
             }
         }
+
         T[] _currentItems = [];
         bool _currentItemsDirty = false;
 
@@ -288,6 +305,20 @@ namespace IVSoftware.Portable.Collections.FollowContexts
             }
         }
         ObservableHashSet<T>? _currentItemsProtected = null;
+
+
+        /// <summary>
+        /// Exposes a stable inverted snapshot of the current selection.
+        /// </summary>
+        public T[] CurrentItemsInverted
+        {
+            get
+            {
+                _ = CurrentItems; // Force rebuild if necessary
+                return _currentItemsInverted;
+            }
+        }
+        T[] _currentItemsInverted = [];
 
         public void ItemPress(T item)
         {

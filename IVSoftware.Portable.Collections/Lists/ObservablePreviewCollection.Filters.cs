@@ -143,7 +143,7 @@ namespace IVSoftware.Portable.Collections.Lists
         private void ReconcileFilters()
         {
             NotifyPreviewCollectionChangedEventArgs e;
-
+            var baseB4 = Items.ToArray();
             try
             {
                 // Do it HERE do it NOW for all clauses.
@@ -213,10 +213,11 @@ namespace IVSoftware.Portable.Collections.Lists
             }
 
             breakFromInner:
+            var baseFTR = Items.ToArray();
+            var changed = baseB4.Length == baseFTR.Length && baseB4.SequenceEqual(baseFTR);
             using (DHostSuspendTracking.GetToken())
             {
-                e = new(NotifyCollectionChangedAction.Reset);
-                OnCollectionChanged(e);
+                WDTResetCollectionSettle.StartOrRestart();
             }
             foreach (var context in FollowContexts.Values)
             {
@@ -386,6 +387,36 @@ namespace IVSoftware.Portable.Collections.Lists
             }
         }
         WatchdogTimer? _wdtActiveFilterSettle = null;
+
+        /// <summary>
+        /// Fire Reset, start a latency lockout.
+        /// </summary>
+        WatchdogTimer WDTResetCollectionSettle
+        {
+            get
+            {
+                if (_wdtResetCollectionSettle is null)
+                {
+                    _wdtResetCollectionSettle = new WatchdogTimer(defaultInitialAction: () =>
+                    {
+                        OnCollectionChanged(new NotifyPreviewCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    })
+                    { 
+                        Interval = TimeSpan.FromSeconds(0.25) 
+                    };
+
+                    _wdtResetCollectionSettle.PropertyChanged += (sender, e) =>
+                    {
+                    };
+                    _wdtResetCollectionSettle.RanToCompletion += (sender, eUnk) =>
+                    {
+                    };
+                }
+                return _wdtResetCollectionSettle;
+            }
+        }
+
+        WatchdogTimer? _wdtResetCollectionSettle = null;
 
         public int CountUnfiltered => IsFiltering ? ItemsSourceProtected.Count : Count;
 

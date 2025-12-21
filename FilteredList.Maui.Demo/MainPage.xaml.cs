@@ -38,7 +38,7 @@ namespace FilteredList.Maui.Demo
                         case nameof(context.CurrentItems):
                             Window!.Title =
                                 $"Sel={BindingContext.SelectionContext.CurrentItems.Length} " +
-                                $"Chk={BindingContext.IsCheckedContext.CurrentItems.Length} ";
+                                $"Chk={BindingContext.IsCheckedContext.CurrentItems.Length}:{BindingContext.IsCheckedContext.CurrentItemsInverted.Length}";
                             break;
                     }
                 };
@@ -78,6 +78,28 @@ namespace FilteredList.Maui.Demo
                         | ListOptimizationMode.TrackItemPropertyChanges
                     };
                     OnPropertyChanged();
+
+#if DEBUG
+                    _itemsSource.CollectionChanged += (sender, e) =>
+                    {
+                        switch (e.Action)
+                        {
+                            case NotifyCollectionChangedAction.Add:
+                                break;
+                            case NotifyCollectionChangedAction.Remove:
+                                break;
+                            case NotifyCollectionChangedAction.Replace:
+                                break;
+                            case NotifyCollectionChangedAction.Move:
+                                break;
+                            case NotifyCollectionChangedAction.Reset:
+                                { }
+                                break;
+                            default:
+                                break;
+                        }
+                    };
+#endif
                 }
                 return _itemsSource;
             }
