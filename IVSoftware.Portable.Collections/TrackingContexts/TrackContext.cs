@@ -275,24 +275,10 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                 {
                     var currentItemsVisible = new HashSet<T>(_owner.Cast<T>());
 
-                    var selected = new List<T>();
-                    var inverted = new List<T>();
-
-                    foreach (var item in currentItemsVisible)
-                    {
-                        if (CurrentItemsProtected.Contains(item))
-                        {
-                            selected.Add(item);
-                        }
-                        else
-                        {
-                            inverted.Add(item);
-                        }
-                    }
-
-                    _currentItems = selected.ToArray();
-                    _currentItemsInverted = inverted.ToArray();
-
+                    _currentItems = 
+                        CurrentItemsProtected
+                        .Where(_=>currentItemsVisible.Contains(_))
+                        .ToArray();
                     _currentItemsDirty = false;
                 }
                 return _currentItems;
@@ -339,19 +325,39 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
         }
         ObservableHashSet<T>? _currentItemsProtected = null;
 
-
-        /// <summary>
-        /// Exposes a stable inverted snapshot of the current selection.
-        /// </summary>
-        public T[] CurrentItemsInverted
+        public T[] CurrentItemsB
         {
             get
             {
-                _ = CurrentItems; // Force rebuild if necessary
-                return _currentItemsInverted;
+                if (_currentItemsDirty)
+                {
+                    _ = CurrentItems;
+                }
+                return _currentItemsB;
             }
         }
-        T[] _currentItemsInverted = [];
+        T[] _currentItemsB = [];
+#if false
+        /// <summary>
+        /// TrackInversions.
+        /// </summary>
+        protected ObservableHashSet<T> CurrentItemsProtectedB
+        {
+            get
+            {
+                if (_currentItemsProtectedB is null)
+                {
+                    _currentItemsProtectedB = new ObservableHashSet<T>();
+                    _currentItemsProtectedB.CollectionChanged += (sender, e) =>
+                    {
+                        _currentItemsDirty = true;
+                    };
+                }
+                return _currentItemsProtectedB;
+            }
+        }
+        ObservableHashSet<T>? _currentItemsProtectedB = null;
+#endif
 
         public void ItemPress(T item)
         {

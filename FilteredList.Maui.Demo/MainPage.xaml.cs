@@ -42,7 +42,14 @@ namespace FilteredList.Maui.Demo
                                 chkB = BindingContext.ItemsSource.Count - chk;
                             Window!.Title =
                                 $"Sel={BindingContext.SelectionContext.CurrentItems.Length} " +
-                                $"Chk={BindingContext.IsCheckedContext.CurrentItems.Length}:{BindingContext.IsCheckedContext.CurrentItemsInverted.Length}";
+                                $"Chk={chk}:{chkB}";
+#endif
+                            switch ((sender as TrackContext<ItemCardModel>)?.PropertyInfo.Name)
+                            {
+                                case nameof(ItemCardModel.IsChecked):
+                                    { }
+                                    break;
+                            }
                             break;
                     }
                 };
