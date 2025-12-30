@@ -42,14 +42,7 @@ namespace FilteredList.Maui.Demo
                                 chkB = BindingContext.ItemsSource.Count - chk;
                             Window!.Title =
                                 $"Sel={BindingContext.SelectionContext.CurrentItems.Length} " +
-                                $"Chk={chk}:{chkB}";
-#endif
-                            switch ((sender as TrackContext<ItemCardModel>)?.PropertyInfo.Name)
-                            {
-                                case nameof(ItemCardModel.IsChecked):
-                                    { }
-                                    break;
-                            }
+                                $"Chk={BindingContext.IsCheckedContext.CurrentItems.Length}:{BindingContext.IsCheckedContext.CurrentItemsInverted.Length}";
                             break;
                     }
                 };
@@ -88,6 +81,28 @@ namespace FilteredList.Maui.Demo
                         | ListOptimizationMode.TrackItemPropertyChanges
                     };
                     OnPropertyChanged();
+
+#if DEBUG
+                    _itemsSource.CollectionChanged += (sender, e) =>
+                    {
+                        switch (e.Action)
+                        {
+                            case NotifyCollectionChangedAction.Add:
+                                break;
+                            case NotifyCollectionChangedAction.Remove:
+                                break;
+                            case NotifyCollectionChangedAction.Replace:
+                                break;
+                            case NotifyCollectionChangedAction.Move:
+                                break;
+                            case NotifyCollectionChangedAction.Reset:
+                                { }
+                                break;
+                            default:
+                                break;
+                        }
+                    };
+#endif
                 }
                 return _itemsSource;
             }
