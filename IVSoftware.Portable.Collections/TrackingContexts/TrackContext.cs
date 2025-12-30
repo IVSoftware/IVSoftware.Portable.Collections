@@ -10,17 +10,24 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace IVSoftware.Portable.Collections.FollowContexts
+namespace IVSoftware.Portable.Collections.TrackingContexts
 {
     [DebuggerDisplay("Count={CurrentItemsProtected.Count}")]
-    public class FollowContext<T> : INotifyPropertyChanged
+    public class TrackContext<T> : INotifyPropertyChanged
     {
-        public FollowContext(IObservablePreviewCollection owner, string binding)
+        public TrackContext(IObservablePreviewCollection owner, string propertyName)
         {
             _owner = owner;
-            PropertyInfo = typeof(T).GetProperty(binding)!;
-            FollowValueDomain = localGetFollowValueDomain();
-            if(FollowValueDomain == FollowValueDomain.Incompatible)
+            var pi = typeof(T).GetMostDerivedProperty(propertyName);
+            if (pi is null)
+            {
+                this.ThrowHard<InvalidOperationException>(
+                    $"{typeof(T).Name}.{propertyName} cannot be resolved.");
+                return;
+            }
+            PropertyInfo = pi;
+            TrackValueDomain = localGetTrackValueDomain();
+            if(TrackValueDomain == TrackValueDomain.Incompatible)
             {
                 this.ThrowHard<ArgumentNullException>(
                     $"{PropertyInfo.Name} is not a compatible follow property.");
@@ -28,26 +35,26 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                 return;
             }
             // The [Follow] attribute can, for example, invert a bool.
-            if (PropertyInfo.GetCustomAttribute<FollowAttribute>() is { } attr)
+            if (PropertyInfo.GetCustomAttribute<TrackAttribute>() is { } attr)
             {
-                FollowMode = attr.Mode;
+                TrackMode = attr.Mode;
                 Condition = attr.Condition;
             }
             else
             {
-                switch (FollowValueDomain)
+                switch (TrackValueDomain)
                 {
-                    case FollowValueDomain.Binary:
-                        FollowMode = FollowMode.Multiple;
-                        Condition = FollowPredicate.IsTrue;
+                    case TrackValueDomain.Binary:
+                        TrackMode = TrackMode.Multiple;
+                        Condition = WherePredicate.IsTrue;
                         break;
-                    case FollowValueDomain.Stateful:
-                        FollowMode = FollowMode.Single;
-                        Condition = FollowPredicate.IsNotZero;
+                    case TrackValueDomain.Stateful:
+                        TrackMode = TrackMode.Single;
+                        Condition = WherePredicate.IsNotZero;
                         break;
-                    case FollowValueDomain.Incompatible:
+                    case TrackValueDomain.Incompatible:
                     default:
-                        this.ThrowHard<NotSupportedException>($"The {FollowValueDomain.ToFullKey()} case is not supported.");
+                        this.ThrowHard<NotSupportedException>($"The {TrackValueDomain.ToFullKey()} case is not supported.");
                         return;
                 }
             }
@@ -58,7 +65,8 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                 ListOptimizationMode.UseCacheForContains 
                 | ListOptimizationMode.TrackItemPropertyChanges;
 
-            ResetSync();
+            ResetSync(); // Synchronous
+            
             if (owner is INotifyCollectionChanged incc)
             {
                 incc.CollectionChanged += (sender, e) =>
@@ -66,17 +74,22 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     switch (e.Action)
                     {
                         case NotifyCollectionChangedAction.Add:
-                            if(e.NewItems is not null)
+                            if (e.NewItems is not null)
                             {
                                 foreach (T item in e.NewItems)
                                 {
-                                    if(_compiledPredicate(item))
+                                    if (_compiledPredicate(item))
                                     {
                                         CurrentItemsProtected.Add(item);
+                                    }
+                                    else
+                                    {
+                                        CurrentItemsProtected.Remove(item);
                                     }
                                 }
                             }
                             break;
+
                         case NotifyCollectionChangedAction.Remove:
                             if (e.OldItems is not null)
                             {
@@ -86,6 +99,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                                 }
                             }
                             break;
+
                         case NotifyCollectionChangedAction.Replace:
                             if (e.OldItems is not null)
                             {
@@ -102,43 +116,50 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                                     {
                                         CurrentItemsProtected.Add(item);
                                     }
+                                    else
+                                    {
+                                        CurrentItemsProtected.Remove(item);
+                                    }
                                 }
                             }
                             break;
+
                         case NotifyCollectionChangedAction.Move:
                             // Noop
                             break;
+
                         case NotifyCollectionChangedAction.Reset:
                             ResetSync();
                             break;
+
                         default:
                             break;
                     }
                 };
             }
+
             if (owner is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += (sender, eUnk) =>
                 {
-                    if(eUnk.PropertyName == PropertyInfo.Name && eUnk is ItemPropertyChangedEventArgs e)
+                    if (eUnk.PropertyName == PropertyInfo.Name
+                        && eUnk is ItemPropertyChangedEventArgs e
+                        && e.Item is T item)
                     {
-                        if(e.Item is T item)
+                        if (_compiledPredicate(item))
                         {
-                            if(_compiledPredicate(item))
-                            {
-                                CurrentItemsProtected.Add(item);
-                            }
-                            else
-                            {
-                                CurrentItemsProtected.Remove(item);
-                            }
+                            CurrentItemsProtected.Add(item);
+                        }
+                        else
+                        {
+                            CurrentItemsProtected.Remove(item);
                         }
                     }
                 };
             }
 
             #region L o c a l F x
-            FollowValueDomain localGetFollowValueDomain()
+            TrackValueDomain localGetTrackValueDomain()
             {
                 var type = PropertyInfo.PropertyType;
                 type = Nullable.GetUnderlyingType(type) ?? type;
@@ -146,13 +167,13 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                 // Binary domain.
                 if (type == typeof(bool))
                 {
-                    return FollowValueDomain.Binary;
+                    return TrackValueDomain.Binary;
                 }
 
                 // Enum domain must be numerically compatible with FollowState.
                 if (type.IsEnum)
                 {
-                    foreach (var canonical in Enum.GetValues<FollowState>())
+                    foreach (var canonical in Enum.GetValues<TrackState>())
                     {
                         if (Enum.TryParse(
                                 enumType: type,
@@ -164,10 +185,10 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                         }
                         else
                         {
-                            return FollowValueDomain.Incompatible;
+                            return TrackValueDomain.Incompatible;
                         }
                     }
-                    return FollowValueDomain.Stateful;
+                    return TrackValueDomain.Stateful;
                 }
 
                 // Plain integral types are admissible but treated as stateful.
@@ -177,16 +198,17 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     || type == typeof(short)
                     || type == typeof(ushort))
                 {
-                    return FollowValueDomain.Stateful;
+                    return TrackValueDomain.Stateful;
                 }
 
-                return FollowValueDomain.Incompatible;
+                return TrackValueDomain.Incompatible;
             }
             #endregion
 
         }
 
         IList _owner;
+
 
         public void ResetSync()
         {
@@ -217,25 +239,25 @@ namespace IVSoftware.Portable.Collections.FollowContexts
 
                 if (type == typeof(bool))
                 {
-                    _compiledGetFollowState =
+                    _compiledGetTrackState =
                         item => ((bool)(_propertyInfo.GetValue(item) ?? false)) ? 1 : 0;
                 }
                 else if (type.IsEnum)
                 {
-                    _compiledGetFollowState =
+                    _compiledGetTrackState =
                         item => Convert.ToInt32(_propertyInfo.GetValue(item)!);
                 }
                 else
                 {
                     // int, byte, sbyte, short, ushort
-                    _compiledGetFollowState =
+                    _compiledGetTrackState =
                         item => Convert.ToInt32(_propertyInfo.GetValue(item) ?? 0);
                 }
             }
         }
 
         PropertyInfo _propertyInfo = null!;
-        Func<T, int> _compiledGetFollowState = null!;
+        Func<T, int> _compiledGetTrackState = null!;
 
 
         /// <summary>
@@ -254,7 +276,10 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     var currentItemsVisible = new HashSet<T>(_owner.Cast<T>());
                     var currentItems = new List<T>();
 
-                    _currentItems = CurrentItemsProtected.Where(_=>currentItemsVisible.Contains(_)).ToArray();
+                    _currentItems = 
+                        CurrentItemsProtected
+                        .Where(_=>currentItemsVisible.Contains(_))
+                        .ToArray();
                     _currentItemsDirty = false;
                 }
                 return _currentItems;
@@ -280,8 +305,19 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     _currentItemsProtected = new ObservableHashSet<T>();
                     _currentItemsProtected.CollectionChanged += (sender, e) =>
                     {
-                        _currentItemsDirty = true;
-                        WDTSettle.StartOrRestart();
+                        // [Careful]
+                        // Specifically, do *not* respond to Reset which tends to be circular.
+                        switch (e.Action)
+                        {
+                            case NotifyCollectionChangedAction.Add:
+                            case NotifyCollectionChangedAction.Remove:
+                                _currentItemsDirty = true;
+                                // WDTSettle.StartOrRestart();
+                                OnPropertyChanged(nameof(CurrentItems));
+                                break;
+                            default:
+                                break;
+                        }
                     };
                 }
                 return _currentItemsProtected;
@@ -289,9 +325,43 @@ namespace IVSoftware.Portable.Collections.FollowContexts
         }
         ObservableHashSet<T>? _currentItemsProtected = null;
 
+        public T[] CurrentItemsB
+        {
+            get
+            {
+                if (_currentItemsDirty)
+                {
+                    _ = CurrentItems;
+                }
+                return _currentItemsB;
+            }
+        }
+        T[] _currentItemsB = [];
+#if false
+        /// <summary>
+        /// TrackInversions.
+        /// </summary>
+        protected ObservableHashSet<T> CurrentItemsProtectedB
+        {
+            get
+            {
+                if (_currentItemsProtectedB is null)
+                {
+                    _currentItemsProtectedB = new ObservableHashSet<T>();
+                    _currentItemsProtectedB.CollectionChanged += (sender, e) =>
+                    {
+                        _currentItemsDirty = true;
+                    };
+                }
+                return _currentItemsProtectedB;
+            }
+        }
+        ObservableHashSet<T>? _currentItemsProtectedB = null;
+#endif
+
         public void ItemPress(T item)
         {
-            if (FollowMode != 0)
+            if (TrackMode != 0)
             {
                 PressedItem = item;
             }
@@ -300,18 +370,18 @@ namespace IVSoftware.Portable.Collections.FollowContexts
         public void ItemRelease(T item)
         {
             PressedItem = default;  // Different than Current!
-            switch (FollowValueDomain)
+            switch (TrackValueDomain)
             {
-                case FollowValueDomain.Binary:
+                case TrackValueDomain.Binary:
                     localItemReleaseBool();
                     break;
-                case FollowValueDomain.Stateful:
+                case TrackValueDomain.Stateful:
                     localItemReleaseState();
                     break;
-                case FollowValueDomain.Incompatible:
+                case TrackValueDomain.Incompatible:
                 default:
 
-                    this.ThrowHard<NotSupportedException>($"The {FollowValueDomain.ToFullKey()} case is not supported.");
+                    this.ThrowHard<NotSupportedException>($"The {TrackValueDomain.ToFullKey()} case is not supported.");
                     break;
             }
             OnPropertyChanged(nameof(CurrentItems));
@@ -320,7 +390,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
             void localItemReleaseState()
             {
                 var unk = PropertyInfo?.GetValue(item);
-                FollowState oldState;
+                TrackState oldState;
                 if (unk is not Enum @enum)
                 {
                     // Initial validation will have already
@@ -328,14 +398,14 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     return;
                 }
 
-                oldState = (FollowState)@enum;
+                oldState = (TrackState)@enum;
 
                 var others = CurrentItems.Where(_ => !ReferenceEquals(_, item)).ToArray();
 
-                FollowMode followMode;
+                TrackMode followMode;
                 string modifiers = string.Empty;
                 bool isDemote = false;
-                if (FollowMode == FollowMode.Single)
+                if (TrackMode == TrackMode.Single)
                 {
                     var e = new ModifiersRequestEventArgs();
                     ModifiersRequest?.Invoke(this, e);
@@ -345,69 +415,69 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                     switch (modifiers)
                     {
                         case "control":
-                            followMode = FollowMode.Multiple;
+                            followMode = TrackMode.Multiple;
                             break;
                         case "alt | control":
-                            followMode = FollowMode.Multiple;
+                            followMode = TrackMode.Multiple;
                             isDemote = true;
                             break;
                         default:
-                            followMode = FollowMode;
+                            followMode = TrackMode;
                             break;
                     }
                 }
                 else
                 {
-                    followMode = FollowMode;
+                    followMode = TrackMode;
                 }
 
                 switch (followMode)
                 {
-                    case FollowMode.None:
-                        SetItemState(item, FollowState.None);
+                    case TrackMode.None:
+                        SetItemState(item, TrackState.None);
                         break;
-                    case FollowMode.Single:
+                    case TrackMode.Single:
                         switch (oldState)
                         {
-                            case FollowState.None:
-                            case FollowState.Multi:    // Promote
-                            case FollowState.Primary:  // Promote
-                                SetItemState(item, FollowState.Exclusive);
+                            case TrackState.None:
+                            case TrackState.Multi:    // Promote
+                            case TrackState.Primary:  // Promote
+                                SetItemState(item, TrackState.Exclusive);
                                 foreach (var oldSel in CurrentItemsProtected.ToArray())
                                 {
                                     if (!ReferenceEquals(oldSel, item))
                                     {
-                                        SetItemState(oldSel, FollowState.None);
+                                        SetItemState(oldSel, TrackState.None);
                                     }
                                 }
                                 break;
-                            case FollowState.Exclusive:
-                                SetItemState(item, FollowState.None);
+                            case TrackState.Exclusive:
+                                SetItemState(item, TrackState.None);
                                 break;
                         }
                         break;
-                    case FollowMode.Multiple:
+                    case TrackMode.Multiple:
                         if (others.Any())
                         {
                             switch (oldState)
                             {
-                                case FollowState.Primary:
+                                case TrackState.Primary:
                                     if (isDemote)
                                     {
-                                        SetItemState(item, FollowState.Multi);
+                                        SetItemState(item, TrackState.Multi);
                                     }
                                     else
                                     {
-                                        SetItemState(item, FollowState.None);
+                                        SetItemState(item, TrackState.None);
                                     }
                                     break;
                                 default:
-                                    SetItemState(item, FollowState.Primary);
+                                    SetItemState(item, TrackState.Primary);
                                     foreach (var oldSel in CurrentItemsProtected.ToArray())
                                     {
                                         if (!ReferenceEquals(oldSel, item))
                                         {
-                                            SetItemState(oldSel, FollowState.Multi);
+                                            SetItemState(oldSel, TrackState.Multi);
                                         }
                                     }
                                     break;
@@ -417,11 +487,11 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                         {
                             switch (oldState)
                             {
-                                case FollowState.None:
-                                    SetItemState(item, FollowState.Exclusive);
+                                case TrackState.None:
+                                    SetItemState(item, TrackState.Exclusive);
                                     break;
                                 default:
-                                    SetItemState(item, FollowState.None);
+                                    SetItemState(item, TrackState.None);
                                     break;
                             }
                         }
@@ -435,9 +505,9 @@ namespace IVSoftware.Portable.Collections.FollowContexts
                 if (CurrentItemsProtected.Count == 1)
                 {
                     T item = CurrentItemsProtected.Cast<T>().First();
-                    if (GetItemState(item) != FollowState.Exclusive)
+                    if (GetItemState(item) != TrackState.Exclusive)
                     {
-                        SetItemState(item, FollowState.Exclusive);
+                        SetItemState(item, TrackState.Exclusive);
                     }
                 }
                 OnPropertyChanged(nameof(CurrentItems));
@@ -445,44 +515,41 @@ namespace IVSoftware.Portable.Collections.FollowContexts
 
             void localItemReleaseBool()
             {
-                var next = _compiledGetFollowState(item) == 0 ? 1 : 0;
+                var next = _compiledGetTrackState(item) == 0 ? 1 : 0;
                 PropertyInfo.SetValue(item, next);
             }
             #endregion L o c a l F x
         }
 
-        FollowState GetItemState(T item) => (FollowState)_compiledGetFollowState(item);
-        void SetItemState(T item, FollowState newState)
+        TrackState GetItemState(T item) => (TrackState)_compiledGetTrackState(item);
+        void SetItemState(T item, TrackState newState)
         {
             PropertyInfo.SetValue(item, newState);
-            switch (newState)
+            if (_compiledPredicate(item))
             {
-                case FollowState.None:
-                    CurrentItemsProtected.Remove(item);
-                    break;
-                case FollowState.Exclusive:
-                case FollowState.Multi:
-                case FollowState.Primary:
-                    CurrentItemsProtected.Add(item);
-                    break;
+                CurrentItemsProtected.Add(item);
+            }
+            else
+            {
+                CurrentItemsProtected.Remove(item);
             }
         }
 
-        public FollowMode FollowMode
+        public TrackMode TrackMode
         {
-            get => _followMode;
+            get => _trackMode;
             set
             {
-                if (!Equals(_followMode, value))
+                if (!Equals(_trackMode, value))
                 {
-                    _followMode = value;
+                    _trackMode = value;
                     OnPropertyChanged();
                 }
             }
         }
-        FollowMode _followMode = FollowMode.Single;
+        TrackMode _trackMode = TrackMode.Single;
 
-        public FollowPredicate Condition
+        public WherePredicate Condition
         {
             get => _condition;
             set
@@ -498,26 +565,26 @@ namespace IVSoftware.Portable.Collections.FollowContexts
 
         private void OnConditionChanged()
         {
-            var getState = _compiledGetFollowState;
+            var getState = _compiledGetTrackState;
 
             _compiledPredicate = Condition switch
             {
-                FollowPredicate.IsNotZero => item => getState(item) != 0,
-                FollowPredicate.IsZero => item => getState(item) == 0,
-                FollowPredicate.IsLessThanZero => item => getState(item) < 0,
-                FollowPredicate.IsGreaterThanZero => item => getState(item) > 0,
-                FollowPredicate.IsLessThanOrEqualToZero => item => getState(item) <= 0,
-                FollowPredicate.IsGreaterThanOrEqualToZero => item => getState(item) >= 0,
-                FollowPredicate.IsTrue => item => getState(item) != 0,
-                FollowPredicate.IsFalse => item => getState(item) == 0,
+                WherePredicate.IsNotZero => item => getState(item) != 0,
+                WherePredicate.IsZero => item => getState(item) == 0,
+                WherePredicate.IsLessThanZero => item => getState(item) < 0,
+                WherePredicate.IsGreaterThanZero => item => getState(item) > 0,
+                WherePredicate.IsLessThanOrEqualToZero => item => getState(item) <= 0,
+                WherePredicate.IsGreaterThanOrEqualToZero => item => getState(item) >= 0,
+                WherePredicate.IsTrue => item => getState(item) != 0,
+                WherePredicate.IsFalse => item => getState(item) == 0,
                 _ => throw new NotSupportedException(
-                    $"Unsupported {nameof(FollowPredicate)}: {Condition}")
+                    $"Unsupported {nameof(WherePredicate)}: {Condition}")
             };
+            ResetSync();
         }
 
 
-
-        FollowPredicate _condition = (FollowPredicate)(-1);
+        WherePredicate _condition = (WherePredicate)(-1);
         Func<T, bool> _compiledPredicate = null!;
 
         public T? PressedItem
@@ -536,7 +603,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
 
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        internal void UpdateCurrentItemsArray() => OnPropertyChanged(nameof(CurrentItems));
+        internal void SyncReset() => OnPropertyChanged(nameof(CurrentItems));
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<ModifiersRequestEventArgs>? ModifiersRequest;
@@ -547,18 +614,21 @@ namespace IVSoftware.Portable.Collections.FollowContexts
             {
                 if (_wdtSettle is null)
                 {
-                    _wdtSettle = new WatchdogTimer { Interval = TimeSpan.FromSeconds(0.1) };
+                    _wdtSettle = new WatchdogTimer(
+                        defaultInitialAction: () =>
+                    {
+                        throw new NotImplementedException("ToDo");
+                    },
+                    defaultCompleteAction: () =>
+                    {
+                    });
+                    _wdtSettle.Interval = TimeSpan.FromSeconds(0.1);
                 }
-                _wdtSettle.RanToCompletion += (sender, e) =>
-                {
-                    OnPropertyChanged(nameof(CurrentItems));
-                };
                 return _wdtSettle;
             }
         }
-
-        internal FollowValueDomain FollowValueDomain { get; }
-
         WatchdogTimer? _wdtSettle = null;
+
+        internal TrackValueDomain TrackValueDomain { get; }
     }
 }

@@ -27,7 +27,7 @@
         Stroke="Black"
         StrokeThickness=".5"
         Padding="4,0,0,0"
-        BackgroundColor="{Binding Selection, Converter={StaticResource SelectionToBackgroundColorConverter}}">
+        BackgroundColor="{Binding PressedSelection, Converter={StaticResource SelectionToBackgroundColorConverter}}">
         <Grid
             ColumnSpacing="0"
             RowSpacing="0"
@@ -47,7 +47,7 @@
                 VerticalTextAlignment="Center"
                 FontSize="16"                
                 Margin="8,0,0,0"
-                TextColor="{Binding Selection, Converter={StaticResource SelectionToTextColorConverter}}" >
+                TextColor="{Binding PressedSelection, Converter={StaticResource SelectionToTextColorConverter}}" >
             </Label>
         </Grid>
     </Border>

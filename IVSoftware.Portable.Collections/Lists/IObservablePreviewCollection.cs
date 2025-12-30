@@ -62,19 +62,19 @@ namespace IVSoftware.Portable.Collections.Lists
         /// <summary>
         /// Selected items without regard to e.g. Primary, Multi, Exclusive etc.
         /// </summary>
-        [Where("Selection", FollowPredicate.IsNotZero)]
+        [Where("Selection", WherePredicate.IsNotZero)]
         IsSelected,
 
         /// <summary>
         /// Items that are affirmatively checked. As in "show only the items that are checked".
         /// </summary>
-        [Where("IsChecked", FollowPredicate.IsTrue)]
+        [Where("IsChecked", WherePredicate.IsTrue)]
         IsChecked,
 
         /// <summary>
         /// Items that are affirmatively unchecked. As in "show only the items that are unchecked".
         /// </summary>
-        [Where("IsChecked", FollowPredicate.IsFalse)]
+        [Where("IsChecked", WherePredicate.IsFalse)]
         IsUnchecked,
     }
 
@@ -131,18 +131,16 @@ namespace IVSoftware.Portable.Collections.Lists
     {
         IDisposable BeginFilterAtom();
 
-        IReadOnlyList<Enum> ActiveFilters { get; }
+        IReadOnlyDictionary<string, Enum> ActiveFilters { get; }
 
-        Task<IReadOnlyList<Enum>> ActivateFilters(Enum stdPredicate, params Enum[] more);
+        void ActivateFilters(Enum stdPredicate, params Enum[] more);
 
-        Task<IReadOnlyList<Enum>> DeactivateFilters(Enum stdPredicate, params Enum[] more);
+        void DeactivateFilters(Enum stdPredicate, params Enum[] more);
 
-        void ClearFilters();
+        void ClearFilters(bool clearInputText = true);
 
         int CountUnfiltered { get; }
 
         bool IsFiltering { get; }
-
-        event EventHandler FiltersReconciled;
     }
 }

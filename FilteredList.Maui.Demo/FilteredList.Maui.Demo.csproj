@@ -22,7 +22,7 @@
 		<ApplicationTitle>FilteredList.Maui.Demo</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.filteredlist.maui.demo</ApplicationId>
+		<ApplicationId>com.ivsoftware.filteredlist.maui.demo</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -65,22 +65,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="IVSoftware.Portable.Common" Version="1.0.0-beta" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-		<PackageReference Include="IVSoftware.GlyphProvider.Portable" Version="1.0.0-*" />
 		<PackageReference Include="IVSoftware.Portable.WatchdogTimer" Version="*" />
 		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="1.0.2-beta" />
 	</ItemGroup>
 
 
 	<!-- Debug uses local project references -->
-	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
-	  <ProjectReference Include="..\IVSoftware.Portable.Collections\IVSoftware.Portable.Collections.csproj" />
-	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Release'">
 		<PackageReference Include="IVSoftware.Portable.Collections" Version="*-*" />
+		<PackageReference Include="IVSoftware.GlyphProvider.Portable" Version="1.0.0-*" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\IVSoftware.GlyphProvider\IVSoftware.GlyphProvider.Portable\IVSoftware.GlyphProvider.Portable.csproj" />
+	  <ProjectReference Include="..\IVSoftware.Portable.Collections\IVSoftware.Portable.Collections.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

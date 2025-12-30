@@ -1,4 +1,5 @@
-﻿using IVSoftware.Portable.SQLiteMarkdown;
+﻿using FilteredList.Maui.Demo.Models;
+using IVSoftware.Portable.SQLiteMarkdown;
 using System.Globalization;
 
 namespace FilteredList.Maui.Demo.ValueConverters
@@ -26,13 +27,20 @@ namespace FilteredList.Maui.Demo.ValueConverters
         {
             if (value is ItemSelection state)
             {
-                return state switch
+                if (state.HasFlag(ItemCardModel.PRESSED))
                 {
-                    ItemSelection.Exclusive => Exclusive,
-                    ItemSelection.Multi => Multi,
-                    ItemSelection.Primary => Primary,
-                    _ => None,
-                };
+                    return Pressed;
+                }
+                else
+                {
+                    return state switch
+                    {
+                        ItemSelection.Exclusive => Exclusive,
+                        ItemSelection.Multi => Multi,
+                        ItemSelection.Primary => Primary,
+                        _ => None,
+                    };
+                }
             }
             else
             {
@@ -59,19 +67,26 @@ namespace FilteredList.Maui.Demo.ValueConverters
 
         public Color Exclusive { get; set; } = Colors.White;
 
-        public Color Pressed { get; set; } = Colors.White;
+        public Color Pressed { get; set; } = Colors.Gray;
 
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is ItemSelection state)
             {
-                return state switch
+                if (state.HasFlag(ItemCardModel.PRESSED))
                 {
-                    ItemSelection.Exclusive => Exclusive,
-                    ItemSelection.Multi => Multi,
-                    ItemSelection.Primary => Primary,
-                    _ => None,
-                };
+                    return Pressed;
+                }
+                else
+                {
+                    return state switch
+                    {
+                        ItemSelection.Exclusive => Exclusive,
+                        ItemSelection.Multi => Multi,
+                        ItemSelection.Primary => Primary,
+                        _ => None,
+                    };
+                }
             }
             else
             {

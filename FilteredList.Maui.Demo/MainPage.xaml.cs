@@ -1,7 +1,7 @@
 ﻿using FilteredList.Maui.Demo.Models;
 using IVSoftware.Portable.Collections;
 using IVSoftware.Portable.Collections.Lists;
-using IVSoftware.Portable.Collections.FollowContexts;
+using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.SQLiteMarkdown;
 using System.Collections;
 using System.ComponentModel;
@@ -25,9 +25,8 @@ namespace FilteredList.Maui.Demo
         public MainPage()
         {
             InitializeComponent();
-#if WINDOWS
             Loaded += (sender, e) => Window!.Title = "Filtered List";
-            foreach (var context in BindingContext.ItemsSource.FollowContexts.Values)
+            foreach (var context in BindingContext.ItemsSource.TrackContexts.Values)
             {
                 context!.PropertyChanged += (sender, e) =>
                 {
@@ -36,14 +35,25 @@ namespace FilteredList.Maui.Demo
                         case nameof(context.PressedItem):
                             break;
                         case nameof(context.CurrentItems):
+#if WINDOWS
+                            // Win Title Bar Text
+                            int
+                                chk = BindingContext.IsCheckedContext.CurrentItems.Length,
+                                chkB = BindingContext.ItemsSource.Count - chk;
                             Window!.Title =
                                 $"Sel={BindingContext.SelectionContext.CurrentItems.Length} " +
-                                $"Chk={BindingContext.IsCheckedContext.CurrentItems.Length} ";
+                                $"Chk={chk}:{chkB}";
+#endif
+                            switch ((sender as TrackContext<ItemCardModel>)?.PropertyInfo.Name)
+                            {
+                                case nameof(ItemCardModel.IsChecked):
+                                    { }
+                                    break;
+                            }
                             break;
                     }
                 };
             }
-#endif
         }
         new MainPageBindingContext BindingContext => (MainPageBindingContext)base.BindingContext;
     }
@@ -84,13 +94,13 @@ namespace FilteredList.Maui.Demo
         }
         ObservablePreviewCollection<ItemCardModel>? _itemsSource = null;
 
-        public FollowContext<ItemCardModel> SelectionContext
+        public TrackContext<ItemCardModel> SelectionContext
         {
             get
             {
                 if (_selectionContext is null)
                 {
-                    _selectionContext = ItemsSource.FollowContexts[nameof(ItemCardModel.Selection)]!;
+                    _selectionContext = ItemsSource.TrackContexts[nameof(ItemCardModel.Selection)]!;
                     _selectionContext.ModifiersRequest += (sender, e) =>
                     {
                         var modifiers = new List<string>();
@@ -124,10 +134,10 @@ namespace FilteredList.Maui.Demo
                 return _selectionContext;
             }
         }
-        FollowContext<ItemCardModel>? _selectionContext = null;
+        TrackContext<ItemCardModel>? _selectionContext = null;
 
-        public FollowContext<ItemCardModel> IsCheckedContext 
-            => ItemsSource.FollowContexts[nameof(ItemCardModel.IsChecked)]!;
+        public TrackContext<ItemCardModel> IsCheckedContext 
+            => ItemsSource.TrackContexts[nameof(ItemCardModel.IsChecked)]!;
 
         void OnItemPressed(ItemCardModel? item)
         {

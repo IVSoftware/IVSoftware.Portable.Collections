@@ -1,6 +1,6 @@
 ﻿using IVSoftware.Portable.Collections;
 using IVSoftware.Portable.Collections.Common;
-using IVSoftware.Portable.Collections.FollowContexts;
+using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.SQLiteMarkdown.Common;
 using System.ComponentModel;
@@ -11,6 +11,7 @@ namespace FilteredList.Maui.Demo.Models
 {
     class ItemCardModel : SelectableQFModel, INotifyPropertyChanging
     {
+        internal static readonly ItemSelection PRESSED = (ItemSelection)0x8;
         public bool ShowCheckboxes
         {
             get
@@ -31,25 +32,55 @@ namespace FilteredList.Maui.Demo.Models
         public static event CancelEventHandler? BeforeShowCheckboxes;
         public event PropertyChangingEventHandler? PropertyChanging;
 
-
-        [Follow(FollowMode.Single, FollowPredicate.IsNotZero)]
+        /// <summary>
+        /// Bindable selection that raises visual state changes for
+        ///pressed without interfering with the tracking state itself.
+        /// </summary>
+        [Track(TrackMode.Single, WherePredicate.IsNotZero)]
         public new ItemSelection Selection
         {
             get => base.Selection;
             set
             {
-                var e = new PropertyChangingPreviewEventArgs<ItemSelection>(
-                    oldValue: base.Selection,
-                    newValue: value);
-                PropertyChanging?.Invoke(this, e);
-                if (!e.Cancel)
+                if (!Equals(Selection, value))
                 {
-                    base.Selection = e.NewValue;
+                    var e = new PropertyChangingPreviewEventArgs<ItemSelection>(
+                        oldValue: base.Selection,
+                        newValue: value,
+                        propertyName: nameof(PressedSelection));
+                    PropertyChanging?.Invoke(this, e);
+                    if (!e.Cancel)
+                    {
+                        base.Selection = e.NewValue;
+                        OnPropertyChanged(nameof(PressedSelection));
+                    }
                 }
             }
         }
 
-        [Follow(FollowMode.Multiple, FollowPredicate.IsTrue)]
+        /// <summary>
+        /// Helper property for tracking visual state when item is pressed.
+        /// </summary>
+        public ItemSelection PressedSelection => IsPressed ? Selection | PRESSED: Selection;
+
+        public bool IsPressed
+        {
+            get => _isPressed;
+            internal set
+            {
+                if (!Equals(_isPressed, value))
+                {
+                    _isPressed = value;
+                    OnPropertyChanged(nameof(PressedSelection));
+                }
+            }
+        }
+        bool _isPressed = false;
+
+
+
+
+        [Track(TrackMode.Multiple, WherePredicate.IsTrue)]
         public new bool IsChecked
         {
             get => base.IsChecked;

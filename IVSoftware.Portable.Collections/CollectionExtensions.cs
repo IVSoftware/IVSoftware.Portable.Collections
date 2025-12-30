@@ -583,7 +583,7 @@ namespace IVSoftware.Portable.Collections
             }
         }
 
-        public static bool TryGetWhere(this Enum @this, out string binding, out string expr, bool @throw = false)
+        public static bool TryGetWhereAttribute(this Enum @this, out string binding, out string expr, bool @throw = false)
         {
             if (@this.GetCustomAttribute<WhereAttribute>() is { } attr)
             {
@@ -596,11 +596,49 @@ namespace IVSoftware.Portable.Collections
                 if (@throw)
                 {
                     @this.ThrowSoft<InvalidOperationException>(
-                        $"Advisory failed {nameof(TryGetWhere)}", @throw: @throw);
+                        $"Advisory failed {nameof(TryGetWhereAttribute)}", @throw: @throw);
                 }
                 binding = expr = string.Empty;
                 return false;
             }
+        }
+
+        public static bool TryGetTrackAttribute(this Enum @this, out string binding, out string expr, bool @throw = false)
+        {
+            if (@this.GetCustomAttribute<WhereAttribute>() is { } attr)
+            {
+                binding = attr.Binding;
+                expr = attr.Expr;
+                return true;
+            }
+            else
+            {
+                if (@throw)
+                {
+                    @this.ThrowSoft<InvalidOperationException>(
+                        $"Advisory failed {nameof(TryGetWhereAttribute)}", @throw: @throw);
+                }
+                binding = expr = string.Empty;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Walks the inheritance chain to return most derived declared instance property.
+        /// </summary>
+        public static PropertyInfo? GetMostDerivedProperty(
+            this Type type,
+            string propertyName,
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+        {
+            for (var t = type; t is not null; t = t.BaseType)
+            {
+                if (t.GetProperty(propertyName, flags) is { } pi)
+                {
+                    return pi;
+                }
+            }
+            return null;
         }
     }
 }

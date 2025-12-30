@@ -21,7 +21,7 @@ namespace IVSoftware.Portable.Collections.Lists
                 // UPGRADE 251126
                 if (e is NotifyPreviewCollectionChangedEventArgs)
                 {
-                    if(MarkdownContext?.IsFiltering == true && DHostSuspendTracking.IsZero())
+                    if(IsFiltering == true && DHostSuspendTracking.IsZero())
                     {
                         TrackVisibleCollectionChanges(e);
                     }
@@ -43,7 +43,7 @@ namespace IVSoftware.Portable.Collections.Lists
 
         private void TrackVisibleCollectionChanges(NotifyCollectionChangedEventArgs e)
         {
-            if (FollowContexts.Any())
+            if (TrackContexts.Any())
             {
                 bool anyError = false;
                 var indexMap = CreateIndexMap();
@@ -62,7 +62,7 @@ namespace IVSoftware.Portable.Collections.Lists
                         }
                         foreach (T item in e.NewItems ?? new T[0])
                         {
-                            ItemsSourceProtected.Insert(newStartingIndex++, item);
+                            UnfilteredItemsProtected.Insert(newStartingIndex++, item);
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
@@ -77,7 +77,7 @@ namespace IVSoftware.Portable.Collections.Lists
                                 }
                                 foreach (int i in rangeIndexes)
                                 {
-                                    ItemsSourceProtected.RemoveAt(i);
+                                    UnfilteredItemsProtected.RemoveAt(i);
                                 }
                             }
                             else
@@ -87,12 +87,12 @@ namespace IVSoftware.Portable.Collections.Lists
                                     // Remove by object
                                     foreach (T item in e.OldItems)
                                     {
-                                        for (int uu = 0; uu < ItemsSourceProtected.Count; uu++)
+                                        for (int uu = 0; uu < UnfilteredItemsProtected.Count; uu++)
                                         {
                                             if (pi.GetValue(item)?.ToString() is { } id &&
-                                                id == pi.GetValue(ItemsSourceProtected[uu])?.ToString())
+                                                id == pi.GetValue(UnfilteredItemsProtected[uu])?.ToString())
                                             {
-                                                ItemsSourceProtected.RemoveAt(uu);
+                                                UnfilteredItemsProtected.RemoveAt(uu);
                                                 break;
                                             }
                                         }
@@ -103,7 +103,7 @@ namespace IVSoftware.Portable.Collections.Lists
                                     // Remove by object
                                     foreach (T item in e.OldItems)
                                     {
-                                        ItemsSourceProtected.Remove(item);
+                                        UnfilteredItemsProtected.Remove(item);
                                     }
                                 }
                             }
@@ -121,7 +121,7 @@ namespace IVSoftware.Portable.Collections.Lists
                             else
                             {
                                 u = indexMap[e.OldStartingIndex];
-                                if (u is null || u is -1 || u >= ItemsSourceProtected.Count)
+                                if (u is null || u is -1 || u >= UnfilteredItemsProtected.Count)
                                 {
                                     // Post-translation error
                                     this.ThrowHard<IndexOutOfRangeException>(
@@ -130,7 +130,7 @@ namespace IVSoftware.Portable.Collections.Lists
                                 }
                                 else
                                 {
-                                    ItemsSourceProtected.RemoveAt((int)u);
+                                    UnfilteredItemsProtected.RemoveAt((int)u);
                                 }
                             }
                         }
@@ -144,7 +144,7 @@ namespace IVSoftware.Portable.Collections.Lists
                             anyError = true;
                         }
                         u = indexMap[e.OldStartingIndex];
-                        if (u is null || u is -1 || u >= ItemsSourceProtected.Count)
+                        if (u is null || u is -1 || u >= UnfilteredItemsProtected.Count)
                         {
                             // Post-translation error
                             this.ThrowHard<IndexOutOfRangeException>(
@@ -167,7 +167,7 @@ namespace IVSoftware.Portable.Collections.Lists
                             }
                             else
                             {
-                                ItemsSourceProtected[(int)u] = (T)e.NewItems[0]!;
+                                UnfilteredItemsProtected[(int)u] = (T)e.NewItems[0]!;
                             }
                         }
                         break;
@@ -189,8 +189,8 @@ namespace IVSoftware.Portable.Collections.Lists
 
                         if (from is null || from is -1 ||
                             to is null || to is -1 ||
-                            from >= ItemsSourceProtected.Count ||
-                            to >= ItemsSourceProtected.Count)
+                            from >= UnfilteredItemsProtected.Count ||
+                            to >= UnfilteredItemsProtected.Count)
                         {
                             this.ThrowHard<InvalidOperationException>(
                                 "Index mapping failed. Visible and canonical collections are out of sync.");
@@ -198,18 +198,18 @@ namespace IVSoftware.Portable.Collections.Lists
                             break;
                         }
                         // Extract the item
-                        var move = ItemsSourceProtected[(int)from];
-                        ItemsSourceProtected.RemoveAt((int)from);
+                        var move = UnfilteredItemsProtected[(int)from];
+                        UnfilteredItemsProtected.RemoveAt((int)from);
                         // If the item was removed before the insertion point,
                         // the target index shifts left by one
                         if (from < to)
                         {
                             to--;
                         }
-                        ItemsSourceProtected.Insert((int)to, move);
+                        UnfilteredItemsProtected.Insert((int)to, move);
                         break;
                     case NotifyCollectionChangedAction.Reset:
-                        ItemsSourceProtected.Clear();
+                        UnfilteredItemsProtected.Clear();
                         break;
                     default:
                         this.ThrowHard<NotSupportedException>($"The {e.Action.ToFullKey()} case is not supported.");
@@ -223,7 +223,7 @@ namespace IVSoftware.Portable.Collections.Lists
                     {
                         Clear();
                         ClearFilters();
-                        foreach (T item in ItemsSourceProtected)
+                        foreach (T item in UnfilteredItemsProtected)
                         {
                             Add(item);
                         }
@@ -236,9 +236,9 @@ namespace IVSoftware.Portable.Collections.Lists
         {
             var indexMap = new TolerantDictionary<int, int>();
             int u = 0;
-            for (int i = 0; i < PreChangeSnapshot.Length && u < ItemsSourceProtected.Count; i++)
+            for (int i = 0; i < PreChangeSnapshot.Length && u < UnfilteredItemsProtected.Count; i++)
             {
-                while (u < ItemsSourceProtected.Count)
+                while (u < UnfilteredItemsProtected.Count)
                 {
                     // Note:
                     // Items that are equal will always have equal visibility
@@ -246,7 +246,7 @@ namespace IVSoftware.Portable.Collections.Lists
                     // there's no chance that 'instance1' of remove would 
                     // be mistaken for 'instance2' for this reason, provided
                     // you are going by mapped index instead of  IndexOf().
-                    if (Equals(PreChangeSnapshot[i], ItemsSourceProtected[u]))
+                    if (Equals(PreChangeSnapshot[i], UnfilteredItemsProtected[u]))
                     {
                         indexMap[i] = u++;
                         break;
@@ -256,7 +256,6 @@ namespace IVSoftware.Portable.Collections.Lists
             }
             return indexMap;
         }
-        protected List<T> ItemsSourceProtected { get; } = new List<T>();
 
         event EventHandler? ISuppressibleEventSource.EventSuppressed
         {

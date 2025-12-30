@@ -30,7 +30,7 @@ namespace IVSoftware.Portable.Collections.Lists
                         break;
                 }
             };
-            InitializeFollowContexts();
+            InitializeTrackContexts();
         }
 
         public ObservablePreviewCollection(IEnumerable<T> items) 
@@ -652,17 +652,66 @@ namespace IVSoftware.Portable.Collections.Lists
                 if (!Equals(_optimizationMode, value))
                 {
                     _optimizationMode = value;
-                    if(_optimizationMode.HasFlag(ListOptimizationMode.UseCacheForContains))
+                    TrackItemPropertyChanges = _optimizationMode.HasFlag(ListOptimizationMode.TrackItemPropertyChanges);
+                    OnPropertyChanged();
+                }
+                if(_optimizationMode.HasFlag(ListOptimizationMode.UseCacheForContains))
+                {
+                    // The flag doesn't need to *change* for this
+                    // to happen. It just needs to be present.
+                    Distinctifier.SyncReset();
+                }
+            }
+        }
+        ListOptimizationMode _optimizationMode = ListOptimizationMode.Normal;
+
+        protected bool TrackItemPropertyChanges
+        {
+            get => _trackItemChanges;
+            set
+            {
+                if (!Equals(_trackItemChanges, value))
+                {
+                    if (_trackItemChanges)
                     {
-                        // The flag doesn't need to *change* for this
-                        // to happen. It just needs to be prsent.
-                        Distinctifier.SyncReset();
+                        if (IsFiltering)
+                        {
+                            foreach(var inpc in UnfilteredItems.OfType<INotifyPropertyChanged>())
+                            {
+                                inpc.PropertyChanged -= OnItemPropertyChanged;
+                            }
+                        }
+                        else
+                        {
+                            foreach(var inpc in this.OfType<INotifyPropertyChanged>())
+                            {
+                                inpc.PropertyChanged -= OnItemPropertyChanged;
+                            }
+                        }
+                    }
+                    _trackItemChanges = value;
+                    if (_trackItemChanges)
+                    {
+                        if (IsFiltering)
+                        {
+                            foreach (var inpc in UnfilteredItems.OfType<INotifyPropertyChanged>())
+                            {
+                                inpc.PropertyChanged += OnItemPropertyChanged;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var inpc in this.OfType<INotifyPropertyChanged>())
+                            {
+                                inpc.PropertyChanged += OnItemPropertyChanged;
+                            }
+                        }
                     }
                     OnPropertyChanged();
                 }
             }
         }
-        ListOptimizationMode _optimizationMode = ListOptimizationMode.Normal;
+        bool _trackItemChanges = false;
 
         public bool AddDistinct(T item)
         {

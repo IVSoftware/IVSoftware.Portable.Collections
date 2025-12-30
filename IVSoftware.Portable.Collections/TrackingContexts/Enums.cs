@@ -1,6 +1,6 @@
 ﻿using IVSoftware.Portable.SQLiteMarkdown;
 
-namespace IVSoftware.Portable.Collections.FollowContexts
+namespace IVSoftware.Portable.Collections.TrackingContexts
 {
     /// <summary>
     /// Specifies the context state of an item in a CollectionView. 
@@ -9,7 +9,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
     /// and this enum is freely interopable though casting.
     /// </remarks>
     [Flags]
-    public enum FollowState
+    public enum TrackState
     {
         /// <summary>
         /// The item is not selected.
@@ -40,7 +40,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
     /// These values track Microsoft.Maui.Controls.SelectionMode
     /// and this enum is freely interopable though casting.
     /// </remarks>
-    public enum FollowMode
+    public enum TrackMode
     {
         /// <summary>
         /// Selection not allowed.
@@ -62,7 +62,7 @@ namespace IVSoftware.Portable.Collections.FollowContexts
         /// </remarks>
         Multiple
     }
-    enum FollowValueDomain
+    enum TrackValueDomain
     {
         Incompatible,
         Binary,

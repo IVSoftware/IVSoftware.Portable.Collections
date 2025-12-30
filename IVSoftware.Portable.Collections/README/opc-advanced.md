@@ -18,11 +18,11 @@ Enables OPC tracking of add and remove events, detecting items that implement `I
 
 ___
 
-## `EnableFilterContexts`
+## Subset Tracking
 
-OPC is an implementer of `IFilterableCollection` and can display a subset of the current recordset. To perform this efficiently, it uses an in-memory `SQLite` database to apply the predicate conditions. For this reason, it requires a property on `<T>` that is decorated with a `[PrimaryKey]` attribute.
+___
 
-Once this prerequisite is met, the `ActivateFilters` method can be invoked with any user-defined `enum` where the member is decorated with a `[Where]` attribute. Activating a filter simply appends the expression to the query. The master list is copied when the first filter is added, and reverted when the last filter is deactivated. Note that if the prerequisite is *not* met, attempting to set a filter raises a `ThrowHard` exception.
+## List Filtering
 
 ```
 public enum StdPredicate

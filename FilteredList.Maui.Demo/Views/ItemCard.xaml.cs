@@ -27,10 +27,7 @@ public partial class ItemCard : ContentView
     private void OnPointerPressed(object sender, PointerEventArgs e)
     {
         PressedCommand?.Execute(BindingContext);
-        if (BindingContext.Selection == 0)
-        {
-            // VisualStateManager.GoToState(Border, "Pressed");
-        }
+        BindingContext.IsPressed = true;
     }
     public ICommand? PressedCommand
     {
@@ -41,6 +38,7 @@ public partial class ItemCard : ContentView
     private void OnPointerReleased(object sender, PointerEventArgs e)
     {
         ReleasedCommand?.Execute(BindingContext);
+        BindingContext.IsPressed = false;
     }
 
     public ICommand? ReleasedCommand

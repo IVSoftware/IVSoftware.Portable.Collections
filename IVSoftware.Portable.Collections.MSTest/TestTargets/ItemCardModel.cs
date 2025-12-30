@@ -1,5 +1,5 @@
 ﻿using IVSoftware.Portable.Collections.Common;
-using IVSoftware.Portable.Collections.FollowContexts;
+using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.SQLiteMarkdown.Common;
 using System.ComponentModel;
@@ -30,7 +30,7 @@ namespace IVSoftware.Portable.Collections.MSTest.TestTargets
         public event PropertyChangingEventHandler? PropertyChanging;
 
 
-        [Follow(FollowMode.Single, FollowPredicate.IsNotZero)]
+        [Track(TrackMode.Single, WherePredicate.IsNotZero)]
         public new ItemSelection Selection
         {
             get => base.Selection;
@@ -47,7 +47,7 @@ namespace IVSoftware.Portable.Collections.MSTest.TestTargets
             }
         }
 
-        [Follow(FollowMode.Multiple, FollowPredicate.IsTrue)]
+        [Track(TrackMode.Multiple, WherePredicate.IsTrue)]
         public new bool IsChecked
         {
             get => base.IsChecked;

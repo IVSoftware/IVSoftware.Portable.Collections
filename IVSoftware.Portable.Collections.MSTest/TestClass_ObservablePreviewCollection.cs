@@ -1,6 +1,6 @@
 using IVSoftware.Portable.Collections.Common;
 using IVSoftware.Portable.Collections.Lists;
-using IVSoftware.Portable.Collections.FollowContexts;
+using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.Collections.MSTest.OPC;
 using IVSoftware.Portable.Collections.MSTest.TestTargets;
 using IVSoftware.Portable.Collections.MSTest.TestUtils;
@@ -1450,15 +1450,15 @@ OperationCanceledException"
 
             var lutc = new ObservablePreviewCollection<OPCItem>();
 
-            lutc.FollowContexts.Follow(lutc, nameof(OPCItem.IsSelected));
+            lutc.TrackContexts.Track(lutc, nameof(OPCItem.IsSelected));
 
             Assert.IsTrue(lutc.OptimizationMode.HasFlag(ListOptimizationMode.TrackItemPropertyChanges));
             lutc.AddRange([itemUnselected, itemSelected]);
 
-            IReadOnlyCollection<OPCItem> filteredList;
             Assert.AreEqual(lutc.Count, 2, "Expecting unfiltered list of 2");
 
-            await lutc.ActivateFilters(TestPredicate.IsSelected);
+            lutc.ActivateFilters(TestPredicate.IsSelected);
+            await lutc;
 
             var sbFiltered = lutc.ToArray();
             { }
@@ -3143,9 +3143,9 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
 
             var opc = new ObservablePreviewCollection<ItemCardModel>();
 
-            var sc = opc.FollowContexts[nameof(ItemCardModel.Selection)];
+            var sc = opc.TrackContexts[nameof(ItemCardModel.Selection)];
 
-            Assert.AreEqual(FollowMode.Single, sc.FollowMode);
+            Assert.AreEqual(TrackMode.Single, sc.TrackMode);
             Assert.AreEqual(nameof(ItemCardModel.Selection), sc.PropertyInfo.Name);
 
             #region L o c a l F x				
@@ -3684,9 +3684,9 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
 
             var opc = new ObservablePreviewCollection<ItemCardModel>();
 
-            var sc = opc.FollowContexts[nameof(ItemCardModel.IsChecked)];
+            var sc = opc.TrackContexts[nameof(ItemCardModel.IsChecked)];
 
-            Assert.AreEqual(FollowMode.Multiple, sc.FollowMode);
+            Assert.AreEqual(TrackMode.Multiple, sc.TrackMode);
             Assert.AreEqual(nameof(ItemCardModel.IsChecked), sc.PropertyInfo.Name);
             { }
 
@@ -3707,7 +3707,7 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     {
         enum TestPredicate
         {
-            [Where("IsSelected", FollowPredicate.IsNotZero)]
+            [Where("IsSelected", WherePredicate.IsNotZero)]
             IsSelected,
         }
         public class OPCItem : INotifyPropertyChanged

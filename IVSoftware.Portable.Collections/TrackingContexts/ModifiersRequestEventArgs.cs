@@ -1,4 +1,4 @@
-﻿namespace IVSoftware.Portable.Collections.FollowContexts
+﻿namespace IVSoftware.Portable.Collections.TrackingContexts
 {
     public class ModifiersRequestEventArgs
     {

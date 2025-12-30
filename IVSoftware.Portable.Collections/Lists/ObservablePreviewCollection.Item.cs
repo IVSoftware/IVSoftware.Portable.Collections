@@ -46,7 +46,7 @@ namespace IVSoftware.Portable.Collections.Lists
                     };
                     _dhostSuppress.FinalDispose += (sender, e) =>
                     {
-                        ReconcileFilters();
+                        WDTReconcileFilters.StartOrRestart();
                     };
                 }
                 return _dhostSuppress;

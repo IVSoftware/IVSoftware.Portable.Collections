@@ -1,4 +1,4 @@
-﻿using IVSoftware.Portable.Collections.FollowContexts;
+﻿using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.Common.Exceptions;
 
 namespace IVSoftware.Portable.Collections.Common
@@ -8,17 +8,17 @@ namespace IVSoftware.Portable.Collections.Common
     /// </summary>
     /// <remarks>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
-    public sealed class FollowAttribute : Attribute
+    public sealed class TrackAttribute : Attribute
     {
-        public FollowAttribute(FollowMode mode, FollowPredicate condition)
+        public TrackAttribute(TrackMode mode, WherePredicate condition)
         {
             Mode = mode;
         }
-        public FollowMode Mode { get; }
-        public FollowPredicate Condition { get; }
+        public TrackMode Mode { get; }
+        public WherePredicate Condition { get; }
     }
 
-    public enum FollowPredicate
+    public enum WherePredicate
     {
         [WherePredicate("<> 0")]
         IsNotZero,
@@ -92,7 +92,7 @@ namespace IVSoftware.Portable.Collections.Common
                 Predicate = expr;
             }
         }
-        public WhereAttribute(string binding, FollowPredicate wherePredicate) : this(wherePredicate)
+        public WhereAttribute(string binding, WherePredicate wherePredicate) : this(wherePredicate)
         {
             if (string.IsNullOrWhiteSpace(binding))
             {
@@ -105,7 +105,7 @@ namespace IVSoftware.Portable.Collections.Common
                 Binding = binding;
             }
         }
-        public WhereAttribute(Enum stdPropertyName, FollowPredicate wherePredicate) : this(wherePredicate)
+        public WhereAttribute(Enum stdPropertyName, WherePredicate wherePredicate) : this(wherePredicate)
         {
             Binding = stdPropertyName.ToString();
         }

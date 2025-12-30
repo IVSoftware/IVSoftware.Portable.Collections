@@ -19,6 +19,7 @@
 
 	<ItemGroup>
 		<!-- Bring in MAUI *type metadata* without MAUI workload activation. -->
+		<PackageReference Include="IVSoftware.Portable.Common" Version="1.0.0-beta" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.0" />
 
 		<!-- IVSoftware packages. -->

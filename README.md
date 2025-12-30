@@ -69,7 +69,7 @@ A simple and representative scenario involves reflection caching for an arbitrar
 This snippet contains a forward reference to `TolerantDictionary` but crisply illustrates why handling the event directly can be advantageous.
 ___
 
-### Example - Reflection Caching (successful) with Pattern Matching
+### Example - Reflection Caching with Pattern Matching
 
 This snippet uses .NET MAUI to show how an unknown object can be probed once, with future reflection requests amortized to O(1). In a tolerant or insistent dictionary, the indexer getter raises a `Replace` preview event when a key is not found. Conceptually, this appears as the `OldItem` having a null `Key` (the canonical tell), while the `NewItem` contains the missing `Key` (in this case, "IsVisible") and a null `Value`. When the handler supplies a non-null `Value`, the dictionary adds it to the collection for fast retrieval next time.
 
