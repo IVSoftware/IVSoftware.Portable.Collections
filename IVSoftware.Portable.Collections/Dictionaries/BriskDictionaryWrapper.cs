@@ -1,6 +1,7 @@
 ﻿using IVSoftware.Portable.Common.Exceptions;
 using IVSoftware.Portable.Xml.Linq;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
+using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -9,8 +10,18 @@ using static IVSoftware.Portable.Collections.Framework;
 
 namespace IVSoftware.Portable.Collections.Dictionaries
 {
-    public sealed class BriskDictionaryWrapper 
+    public sealed class BriskDictionaryWrapper
     {
+        public BriskDictionaryWrapper(XElement xdunk, IObservableDictionary dict)
+        {
+            XDUNK = xdunk;
+            XBA = new XBoundAttribute(
+                name: nameof(StdCollectionXAttribute.dunk),
+                tag: this,
+                text: Name); // Placeholder.
+            XDUNK.Add(XBA);
+            @base = dict;
+        }
         public BriskDictionaryWrapper(XElement xdunk, Type? template = null)
         {
             XDUNK = xdunk;

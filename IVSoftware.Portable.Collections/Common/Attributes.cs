@@ -48,7 +48,9 @@ namespace IVSoftware.Portable.Collections.Common
     /// <summary>
     /// Declares a string-based predicate associated with an enum member.
     /// </summary>
-    /// <remarks>
+    /// <remarks>   
+    /// <see cref="WherePredicate"/>
+    /// </remarks>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public sealed class WherePredicateAttribute : CollectionAttribute
     {
@@ -62,7 +64,6 @@ namespace IVSoftware.Portable.Collections.Common
     /// <summary>
     /// Declares a string-based predicate associated with an enum member.
     /// </summary>
-    /// <remarks>
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public sealed class WhereAttribute : CollectionAttribute
     {
@@ -131,4 +132,23 @@ namespace IVSoftware.Portable.Collections.Common
         public string Expr => $"{Binding} {Predicate}";
     }
 
+    [Flags]
+    public enum VisibilityPredicateFlag
+    {
+        Always      = 0x0,
+        Empty       = 0x1,
+        Single      = Empty << 1,
+        Multiple    = Single << 1,
+    }
+
+    /// <summary>
+    /// Declares a member visibility based on a track context.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+    public class VisibilityPredicateAttribute : Attribute
+    {
+        public VisibilityPredicateAttribute(VisibilityPredicateFlag visibility) => Visibility = visibility;
+
+        public VisibilityPredicateFlag Visibility { get; }
+    }
 }

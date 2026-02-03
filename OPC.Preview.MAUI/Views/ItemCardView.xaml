@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="OPC.Preview.Maui.Views.ItemCardView"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters"
+    HeightRequest="48">
+    <ContentView.GestureRecognizers>
+        <PointerGestureRecognizer
+            PointerPressed="OnPointerPressed"
+            PointerReleased="OnPointerReleased"/>
+    </ContentView.GestureRecognizers>
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <conv:SelectionToBackgroundColorConverter
+                x:Key="SelectionToBackgroundColorConverter" />
+            <conv:SelectionToTextColorConverter
+                x:Key="SelectionToTextColorConverter" />
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Border
+        x:Name="Border"
+        Stroke="Black"
+        StrokeThickness=".5"
+        Padding="4,0,0,0"
+        BackgroundColor="{Binding PressedSelection, Converter={StaticResource SelectionToBackgroundColorConverter}}">
+        <Grid
+            ColumnSpacing="0"
+            RowSpacing="0"
+            ColumnDefinitions="Auto,*"
+            VerticalOptions="Fill">
+            <opc:GlyphCheckBox
+                IsVisible="{Binding 
+                    Path=BindingContext.ShowCheckboxes, 
+                    Source={RelativeSource AncestorType={x:Type CollectionView}}}"
+                IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                LongPressedCommand="{Binding
+                    Path=BindingContext.ItemLongPressedCommand, 
+                    Source={RelativeSource AncestorType={x:Type CollectionView}}}"
+                BackgroundColor="Transparent"
+                HoverColor="#666666"
+                Margin="0,4,0,0"
+                VerticalOptions="Fill"/>
+            <Label
+                x:Name="DescriptionLabel"
+                Grid.Column="1"
+                Text="{Binding Description}"
+                VerticalTextAlignment="Center"
+                FontSize="16"                
+                Margin="8,0,0,0"
+                TextColor="{Binding PressedSelection, Converter={StaticResource SelectionToTextColorConverter}}" >
+            </Label>
+        </Grid>
+    </Border>
+</ContentView>

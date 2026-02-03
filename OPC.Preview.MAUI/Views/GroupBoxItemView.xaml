@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"    
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"   
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters;assembly=OPC.Preview.Maui"   
+    x:Class="OPC.Preview.Maui.Views.GroupBoxItemView">
+    <ContentView.Resources>
+        <x:Double x:Key="RadioButtonHeight">45.0</x:Double>
+    </ContentView.Resources>
+    <Grid
+        Margin="0,1"
+        Padding="2"
+        RowDefinitions="Auto"
+        ColumnDefinitions="Auto, *"
+        BackgroundColor="#08222222">
+        <!--Override styled text colors-->
+        <opc:GlyphButton
+            IsVisible="{Binding IsIconVisible}"
+            TextColor="#222222"
+            Padding="0"
+            Grid.Column="0"
+            OPID="{Binding Icon}"
+            WidthRequest="25"
+            WidthTracksHeight="False"
+            HeightRequest="{StaticResource RadioButtonHeight}"
+            ClickableEventCommand="{Binding ClickableEventCommand}"/>
+        <Label 
+            IsVisible="{Binding IsLabelStyle}"
+            Grid.Column="1"
+            Text="{Binding Text}"
+            TextColor="#222222"
+            HeightRequest="{StaticResource RadioButtonHeight}"
+            VerticalTextAlignment="Center"
+            Padding="0,0,0,1">
+        </Label>
+        <Label 
+            IsVisible="{Binding IsChecked}"
+            Grid.Column="1"
+            Text="Close"
+            TextColor="#80222222"
+            HeightRequest="{StaticResource RadioButtonHeight}"
+            VerticalTextAlignment="Center"
+            HorizontalTextAlignment="End"
+            Margin="0,0,10,0"
+            Padding="0,0,0,1">
+        </Label>
+        <opc:GlyphButton
+            IsVisible="{Binding IsLabelStyle}"
+            Grid.Column="1"
+            BackgroundColor="Transparent"
+            TextColor="#222222"
+            WidthTracksHeight="False"
+            ClickableEventCommand="{Binding ClickableEventCommand}"/>
+        <Grid 
+            IsVisible="{Binding IsButtonStyle}"
+            Padding="10,0"
+            Grid.Column="1">
+            <opc:GlyphButton
+                Grid.Column="1"
+                Text="{Binding Text}"
+                Style="{StaticResource GroupBoxButtonStyle}"
+                WidthTracksHeight="False"
+            ClickableEventCommand="{Binding ClickableEventCommand}"/>
+        </Grid>
+    </Grid>
+</ContentView>

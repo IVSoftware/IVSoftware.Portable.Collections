@@ -6,18 +6,47 @@ using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO.Pipes;
+using System.Windows.Input;
 
 namespace IVSoftware.Portable.Collections.Lists
 {
-    public partial class ObservablePreviewCollection<T> : ObservableCollection<T>, ISuppressibleEventSource
+    public partial class ObservablePreviewCollection<T> 
+        : ObservableCollection<T>
+        , ISuppressibleEventSource
+        , IContainerBindingContext
     {
+        public object? ContainerBindingContext
+        {
+            get => _containerBindingContext;
+            set
+            {
+                if (!Equals(_containerBindingContext, value))
+                {
+                    _containerBindingContext = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        object? _containerBindingContext = default;
+
+
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             this.OnAwaited();
 
             if (DHostSuppress.IsZero()) // Public, preeminent suppression.
             {
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        foreach (var ecc in e.NewItems?.OfType<IContainerBindingContext>() ?? [])
+                        {
+                            ecc.ContainerBindingContext = this;
+                        }
+                        break;
+                }
                 // UPGRADE 251126
                 if (e is NotifyPreviewCollectionChangedEventArgs)
                 {
@@ -25,6 +54,38 @@ namespace IVSoftware.Portable.Collections.Lists
                     {
                         TrackVisibleCollectionChanges(e);
                     }
+#if DEBUG
+                    // Internal testing - in DEBUG mode - only.
+                    // UnitTesting is responsible for visibility on and coverage for this edge case.
+                    if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex == -1)
+                    {
+                        Debug.WriteLine($@"ADVISORY - This condition can lead to a procedural failure in MAUI collection.");
+#if ABSTRACT
+{FDA1ED69-E0BC-4ABC-BA87-7D4FF5BEB318}
+namespace Microsoft.Maui.Controls
+{
+	public class MarshalingObservableCollection : List<object>, INotifyCollectionChanged
+	{
+        void Add(NotifyCollectionChangedEventArgs args)
+        {
+	        var startIndex = args.NewStartingIndex;
+	        foreach (var item in args.NewItems)
+	        {
+		        Insert(startIndex, item);
+		        startIndex += 1;
+	        }
+
+	        OnCollectionChanged(args);
+        }
+        ...
+    }
+}
+#endif
+
+                    }
+#endif
+
+
                     // Now raise the 'master' event stating everything is synced as we know it.
                     base.OnCollectionChanged(e);
                     Framework.RaiseEvent(this, e); // Static version

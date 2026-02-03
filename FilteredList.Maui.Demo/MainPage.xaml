@@ -4,50 +4,72 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="FilteredList.Maui.Demo.MainPage"
     xmlns:local="clr-namespace:FilteredList.Maui.Demo"
-    xmlns:ctl="clr-namespace:FilteredList.Maui.Demo.Controls"
-    xmlns:view="clr-namespace:FilteredList.Maui.Demo.Views"
+    xmlns:view="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
     xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
     Shell.NavBarIsVisible="False">
     <ContentPage.BindingContext>
         <local:MainPageBindingContext/>
     </ContentPage.BindingContext>
     <Grid
-        RowDefinitions="*,40">
+        RowDefinitions="*,Auto">
         <CollectionView
             Grid.Row="0"
-            ItemsSource="{Binding ItemsSource}"
+            ItemsSource="{Binding Items}"
             SelectionMode="{Binding SelectionMode}"            
             BackgroundColor="Azure">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <view:ItemCard
-                PressedCommand="{Binding Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},
-                                         Path=ItemPressedCommand}"
-                ReleasedCommand="{Binding Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},
-                                          Path=ItemReleasedCommand}" />
+                    <view:ItemCardView
+                        PressedCommand="{Binding
+                                Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},                        
+                                Path=CardPressedCommand}"
+                        ReleasedCommand="{Binding 
+                                Source={RelativeSource AncestorType={x:Type local:MainPageBindingContext}},
+                                Path=CardReleasedCommand}" />
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
         <Grid
-            ColumnDefinitions="*,Auto,*,Auto,*"
+            IsVisible="{Binding IsCheckboxFilteringEnabled}"
+            HeightRequest="{OnPlatform WinUI=40, Android=50, iOS=50, MacCatalyst=50}"
             Grid.Row="1"
             BackgroundColor="Black">
-            <ctl:GlyphToggleButton               
-                Grid.Column="1"
-                Margin="2"
-                StdIconName="{x:Static gp:GlyphProvider+IconBasics.Checked}" 
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding
+                    IsVisible, 
+                    Source={x:Reference ShowChecked},
+                    Converter={StaticResource IsVisibleToColumnWidthConverter}}"/>
+                <ColumnDefinition Width="{Binding
+                    IsVisible, 
+                    Source={x:Reference ShowUnchecked},
+                    Converter={StaticResource IsVisibleToColumnWidthConverter}}"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <opc:GlyphToggleButton
+                x:Name="ShowChecked"
+                Grid.Column="0"
+                IsVisible="{Binding ShowCheckboxes}"
+                Margin="20,2"
+                OPID="{x:Static gp:GlyphProvider+IconBasics.Checked}"
+                BorderWidthToggled="3" 
                 ToggleState="{Binding ShowChecked, Mode=TwoWay}"/>
-            <ctl:GlyphToggleButton
-                Grid.Column="3"
-                Margin="2"
-                StdIconName="{x:Static gp:GlyphProvider+IconBasics.Unchecked}"
+            <opc:GlyphToggleButton
+                x:Name="ShowUnchecked"
+                Grid.Column="1"
+                IsVisible="{Binding ShowCheckboxes}"
+                Margin="20,2"
+                OPID="{x:Static gp:GlyphProvider+IconBasics.Unchecked}"
+                BorderWidthToggled="3" 
                 ToggleState="{Binding ShowUnchecked, Mode=TwoWay}"/>
-            <!--
-            <ctl:GlyphButton
-                Grid.Column="5"
-                Margin="2"
-                StdIconName="{x:Static gp:GlyphProvider+IconBasics.EllipsisHorizontal}"/>
-            -->
+            <opc:GlyphToggleButton
+                x:Name="ShowCheckboxes"
+                Grid.Column="2"
+                Margin="20,2"
+                BorderWidthToggled="3" 
+                BorderColor="Aqua"
+                OPID="{Binding HideCheckboxesIcon}"
+                ToggleState="{Binding HideCheckboxes, Mode=TwoWay}"/>
         </Grid>     
     </Grid>
 </ContentPage>

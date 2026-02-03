@@ -1,7 +1,9 @@
 ﻿using IVSoftware.Portable.Common.Exceptions;
 using IVSoftware.Portable.Disposable;
+using IVSoftware.Portable.Xml.Linq;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using IVSoftware.Portable.Xml.Linq.XBoundObject.Placement;
+using Newtonsoft.Json.Linq;
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -24,7 +26,7 @@ namespace IVSoftware.Portable.Collections.Dictionaries
 
                 XElement xdunk = null!; // Placer will place.
                 object[] progressive = [];
-                string path;
+                string path = string.Empty;
                 PlacerResult result;
 
                 foreach (var unk in keyChain)
@@ -44,21 +46,51 @@ namespace IVSoftware.Portable.Collections.Dictionaries
                             break;
                         default:
                             this.ThrowHard<NotSupportedException>($"The {result.ToFullKey()} case is not expected.");
-                            return null!; 
+                            return null!;
                     }
                 }
 
                 bdw = xdunk.To<BriskDictionaryWrapper>();
                 if (bdw is null)
                 {
-                    bdw = new BriskDictionaryWrapper(xdunk, DefaultActivationType);
-                    if(bdw.XDUNK.Parent is not null)
+                    var e = new NotifyCollectionChangingEventArgs(
+                        action: NotifyCollectionChangingAction.Add,
+                        changedItem: new DictionaryEntryPreview(path, DefaultConstructorInfo?.Invoke([])));
+
+                    // Avoid automatic ApplyChanges because the preview is an *unwrapped* IDictionary
+                    RaiseCollectionChanging(e);
+                    if (e.Cancel)
                     {
-                        OnCollectionChanged(
-                            new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add, changedItem: bdw));
+                        if (e.Cancel)
+                        {
+                            this.ThrowSoft<OperationCanceledException>();
+                            return null!;   // We warned you.
+                        }
+                    }
+                    var preview = 
+                        e.NewItems?
+                        .OfType<DictionaryEntryPreview>()
+                        .Select(_=>_.Value)
+                        .OfType<IObservableDictionary>()
+                        .ToArray() ?? [];
+                    if(preview.Length == 1)
+                    {
+                        bdw = new BriskDictionaryWrapper(xdunk, preview[0]);
+                    }
+                    else
+                    {
+                        this.ThrowHard<InvalidCastException>(
+                            $"Expecting single value that is assignable to {nameof(IObservableDictionary)}");
+                        return null!;   // We warned you.
+                    }
+
+                    if (bdw.XDUNK.Parent is not null)
+                    {
+                        @base[bdw.@base] = bdw;
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add, changedItem: bdw));
                     }
                 }
-                if( keyChain.Last() is Enum @enum &&
+                if (keyChain.Last() is Enum @enum &&
                     @enum.GetType().GetCustomAttribute<KeySegmentAttribute>() is not null &&
                     @enum.GetCustomAttribute<StrongTypedDictionaryAttribute>() is { } stda)
                 {
@@ -81,7 +113,7 @@ namespace IVSoftware.Portable.Collections.Dictionaries
                         false       // bool @throw
                     };
 
-                    if(!(bool)_method.Invoke(bdw, parameters)!)
+                    if (!(bool)_method.Invoke(bdw, parameters)!)
                     {
                         bdw.ThrowHard<InvalidOperationException>($"Failed inline strong type upgrade from {@enum.ToFullKey()}.");
                     }
@@ -90,6 +122,7 @@ namespace IVSoftware.Portable.Collections.Dictionaries
             }
         }
         private MethodInfo? _method = null;
+
         public XElement Model { get; } = new XElement(nameof(StdCollectionXElement.model));
 
         public event EventHandler<ExpandXKeyFormatRequestedEventArgs>? ExpandXKeyFormatRequested;
@@ -105,7 +138,6 @@ namespace IVSoftware.Portable.Collections.Dictionaries
 
         public bool ContainsKey(object key, params object[] moreKeys)
         {
-            Debug.Fail($@"ADVISORY - First Time.");
             object[] unrolled = key.UnrollKeyChainObjects(moreKeys);
             var path = unrolled.MakePathFromObjects();
             return PlacerResult.Exists == Model.Place(path, PlacerMode.FindOrPartial);
@@ -144,7 +176,7 @@ namespace IVSoftware.Portable.Collections.Dictionaries
                             var desc = localToStringHeuristic(value);
 
                             var xentry = new XElement(
-                                nameof(StdCollectionXElement.entry), 
+                                nameof(StdCollectionXElement.entry),
                                 new XAttribute(nameof(StdCollectionXAttribute.type), value?.GetType().Name ?? "null"));
                             var xkey = new XElement(nameof(StdCollectionXElement.key), key.ToFormattedKeyName());
                             var xvalue = new XElement(nameof(StdCollectionXElement.value), desc);
@@ -164,7 +196,7 @@ namespace IVSoftware.Portable.Collections.Dictionaries
                     {
                         switch (o)
                         {
-                            case null: 
+                            case null:
                                 return "null";
                             case string @string:
                                 return @string;
@@ -212,22 +244,39 @@ namespace IVSoftware.Portable.Collections.Dictionaries
             get => _defaultActivationType;
             set
             {
-                if (!Equals(_defaultActivationType, value))
+                if (value?.IsAssignableTo(typeof(IDictionary)) == true
+                    && !Equals(_defaultActivationType, value))
                 {
-                    if (value.GetConstructor(Type.EmptyTypes) is null)
+                    if (value.GetConstructor(Type.EmptyTypes) is ConstructorInfo ctor)
+                    {
+                        _defaultActivationType = value;
+                        _defaultConstructorInfo = ctor;
+                    }
+                    else
                     {
                         this.ThrowHard<InvalidOperationException>(
 $@"Type '{value.FullName ?? value.Name}' is missing a public parameterless constructor.
 {nameof(DefaultActivationType)} remains set to {_defaultActivationType.ToFormattedTypeName()}."
                         );
                     }
-                    else
-                    {
-                        _defaultActivationType = value;
-                    }
                 }
             }
         }
         Type _defaultActivationType = typeof(TolerantDictionary<object, object>);
+
+        public ConstructorInfo DefaultConstructorInfo
+        {
+            get
+            {
+                if (_defaultConstructorInfo is null)
+                {
+                    _defaultConstructorInfo = 
+                        DefaultActivationType
+                        .GetConstructor(Type.EmptyTypes)!;
+                }
+                return _defaultConstructorInfo;
+            }
+        }
+        ConstructorInfo? _defaultConstructorInfo = null;
     }
 }

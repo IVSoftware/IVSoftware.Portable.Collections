@@ -1256,7 +1256,7 @@ Action=NotifyCollectionChangedAction.Add, NewItems=1, OldItems=null, NewStarting
 
                 var loopback =
                     Brisk[btn1].AsStronglyTypedDictionary<string, Setting>();
-                Assert.ReferenceEquals(
+                Assert.AreSame(
                     loopback,
                     dsts1);
 

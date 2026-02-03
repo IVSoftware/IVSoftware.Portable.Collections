@@ -20,18 +20,18 @@
 	<ItemGroup>
 		<!-- Bring in MAUI *type metadata* without MAUI workload activation. -->
 		<PackageReference Include="IVSoftware.Portable.Common" Version="1.0.0-beta" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
 
 		<!-- IVSoftware packages. -->
 		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0-*" />
 		<PackageReference Include="IVSoftware.Portable.Threading" Version="2.0.0-*" />
 		<PackageReference Include="IVSoftware.WinOS.MSTest.Extensions" Version="1.0.8" />
 		<PackageReference Include="IVSoftware.WinOS.MSTest.Extensions.STA" Version="1.0.0-beta" />
-		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="*-*" />
+		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="1.0.2-rc" />
 
 		<!-- The MSTest toolchain. -->
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-		<PackageReference Include="MSTest" Version="3.6.4" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+		<PackageReference Include="MSTest" Version="4.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>

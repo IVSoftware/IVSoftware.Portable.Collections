@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<opv:ModalItemBaseView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="OPC.Preview.Maui.Views.GlyphButtonView"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters"
+    HeightRequest="40"
+    HorizontalOptions="Fill">
+
+    <Border
+        Style="{StaticResource CollectionBorderItemStyle}">
+        <opc:GlyphButton
+            FontFamily="{Binding FontFamily}"
+            Style="{StaticResource ModalGlyphButtonStyle}"
+            OPID="{Binding OPID}"
+            Text="{Binding Text}"
+            Clicked="OnClicked"/>
+    </Border>
+</opv:ModalItemBaseView>

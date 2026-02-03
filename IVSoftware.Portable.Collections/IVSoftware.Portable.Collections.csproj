@@ -58,7 +58,11 @@
 		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0-*" />
 		<PackageReference Include="IVSoftware.Portable.Reconciler" Version="1.0.3" />
 		<PackageReference Include="IVSoftware.Portable.Xml.Linq.XBoundObject" Version="2.0.3" />
-		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="*-*" />
+		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="1.0.2-rc" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="README\img\" />
 	</ItemGroup>
 
 </Project>

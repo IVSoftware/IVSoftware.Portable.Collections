@@ -124,7 +124,6 @@ namespace IVSoftware.Portable.Collections.Lists
         , IList<T>
         , IRangeable<T>
     {
-        new int Count { get; }
         bool AddDistinct(T item);
     }
     public interface IFilterableCollection
@@ -142,5 +141,11 @@ namespace IVSoftware.Portable.Collections.Lists
         int CountUnfiltered { get; }
 
         bool IsFiltering { get; }
+    }
+    public interface ITrackContext : INotifyPropertyChanged
+    {
+        public int Count { get; }
+
+        public Array CurrentItems { get; }
     }
 }

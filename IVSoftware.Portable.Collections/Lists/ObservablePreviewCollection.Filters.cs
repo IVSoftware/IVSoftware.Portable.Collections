@@ -178,151 +178,8 @@ namespace IVSoftware.Portable.Collections.Lists
         }
         bool? _isTNew = null;
         private readonly object _lock = new();
-        private async Task ReconcileFilters()
-        {
-            #region L o c a l F x 
-            bool localConcurrentIsWdtRestarted()
-            {
-                bool isWdtRestarted;
-                lock (_lock)
-                {
-                    isWdtRestarted = WDTReconcileFilters.Running;
-                }
-                if (isWdtRestarted)
-                {
-                    Debug.Fail($@"ADVISORY - Expecting this is a rare corner case.");
-                }
-                return isWdtRestarted;
-            }
-            #endregion L o c a l F x
-            if (!DHostActiveFilterAtomic.IsZero())
-            {
-                // Reconciliation is being deferred until DHost releases
-                // last token, and this will restart the WDT.
-                return;
-            }
-            else
-            {
-                if (localConcurrentIsWdtRestarted())
-                {
-                    Debug.Fail($@"ADVISORY - This is a 'legal-but-rare' corner case.");
-                    return;
-                }
-                try
-                {
-                    if (IsFiltering)
-                    {
-                        if (MarkdownContext is null)
-                        {
-                            // [Track] predicates (non-sql) can still be used,
-                            // but this has not been implemented at this time.
-                            this.ThrowHard<NotSupportedException>(
-                                $"Missing {nameof(MarkdownContext)}");
-                        }
-                        else
-                        {
-                            List<T> staged = new();
-                            List<string> predicates = new();
-                            if (MarkdownContext?.FilteringState == FilteringState.Active)
-                            {
-                                _ = MarkdownContext.ParseSqlMarkdown();
-                                if (MarkdownContext?.XAST.Attribute(nameof(StdAstAttr.clauseE))?.Value is string markdown)
-                                {
-                                    predicates.Insert(0, markdown);
-                                }
-                            }
 
-                            if (localConcurrentIsWdtRestarted()) return;
 
-                            if (ActiveFilters.Any())
-                            {
-                                predicates.AddRange(
-                                    ActiveFilters.Values
-                                    .Select(_ => _.GetCustomAttribute<WhereAttribute>()?.Expr)
-                                    .Where(_ => !string.IsNullOrWhiteSpace(_))
-                                    .Select(_ => $"({_})"));// Add parentheses out of an abundance of paranoia.
-                            }
-
-                            if (predicates.Any()
-                                && FilterDB.GetMapping(typeof(T)) is TableMapping map
-                                && TryGetTable(out var table)
-                                && TryGetPrimaryKeyProperty(out var pi))
-                            {
-                                var predicateWhere = string.Join(" AND ", predicates);
-
-                                // Some predicate or predicates.
-                                var sql = $"SELECT {pi.Name} FROM {table} WHERE {predicateWhere}";
-
-                                // [Careful]
-                                // The staged property must contain EXISTING REFERENCES.
-                                // The purpose of the query is to obtain the Ids of matches ONLY.
-                                var ids =
-                                    FilterDB
-                                    .Query(map, sql)
-                                    .Select(_ => pi.GetValue(_)?.ToString())
-                                    .Where(_ => !string.IsNullOrWhiteSpace(_))
-                                    .ToArray(); // For vis
-                                var pkVisible = new HashSet<string>(ids!);
-
-                                // What should be visible.
-                                // This is culled from the ItemsSourceInternal that is the OG
-                                // authority because it was captured when the first filter came on.
-                                staged = UnfilteredItems.Where(_ =>
-                                {
-                                    return
-                                        pi.GetValue(_)?.ToString() is { } id
-                                        && !string.IsNullOrWhiteSpace(id)
-                                        && pkVisible.Contains(id);
-                                }).ToList();
-                            }
-
-                            if (localConcurrentIsWdtRestarted()) return;
-
-                            // None is "Show All"
-                            if (staged.Count == 0)
-                            {
-                                foreach (T item in UnfilteredItemsProtected)
-                                {
-                                    staged.Add(item);
-                                }
-                            }
-                            var stagedPKs = staged.Select(_ => PrimaryKeyProperty?.GetValue(_)?.ToString()).ToArray();
-                            var thisPKs = this.Select(_ => PrimaryKeyProperty?.GetValue(_)?.ToString()).ToArray();
-                            if (stagedPKs.SequenceEqual(thisPKs))
-                            {   /* G T K */
-                            }
-                            else
-                            {
-                                using (DHostSuspendTracking.GetToken())
-                                {
-                                    base.Clear();
-                                    foreach (var item in staged)
-                                    {
-                                        base.Add(item);
-                                    }
-                                    // [Careful]
-                                    // Remember this must be the Preview subclass.
-                                    // Swallowed otherwise!
-                                    var ePreview = new NotifyPreviewCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-                                    OnCollectionChanged(ePreview);
-                                }
-                                foreach (var context in TrackContexts.Values)
-                                {
-                                    context!.SyncReset();
-                                }
-                                // Perform actions only when changes occur.
-                                Distinctifier.SyncReset();
-                                this.OnAwaited();
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    this.RethrowFramework(ex);
-                }
-            }
-        }
 
         public void ActivateFilters(Enum filter, params Enum[] moreFilters)
         {
@@ -388,6 +245,177 @@ namespace IVSoftware.Portable.Collections.Lists
                 }
             }
         }
+        private async Task ReconcileFilters()
+        {
+            if (!DHostActiveFilterAtomic.IsZero())
+            {
+                // Reconciliation is being deferred until DHost releases
+                // last token, and this will restart the WDT.
+                return;
+            }
+            else
+            {
+                if (localConcurrentIsWdtRestarted())
+                {
+                    Debug.Fail($@"ADVISORY - This is a 'legal-but-rare' corner case.");
+                    return;
+                }
+                try
+                {
+                    if (IsFiltering)
+                    {
+                        if (MarkdownContext is null)
+                        {
+                            // [Track] predicates (non-sql) can still be used,
+                            // but this has not been implemented at this time.
+                            this.ThrowHard<NotSupportedException>(
+                                $"Missing {nameof(MarkdownContext)}");
+                        }
+                        else
+                        {
+                            string[] 
+                                stagedPKs = [], 
+                                thisPKs = [];
+                            string? markdown = null;
+                            List<T> staged = new();
+                            List<string> predicates = new();
+                            await Task.Run(() =>
+                            {
+                                if (MarkdownContext?.FilteringState == FilteringState.Active)
+                                {
+                                    _ = MarkdownContext.ParseSqlMarkdown();
+                                    markdown = MarkdownContext?.GetCurrentFilterPredicate();
+
+                                    if (!string.IsNullOrWhiteSpace(markdown))
+                                    {
+                                        predicates.Insert(0, markdown);
+                                    }
+                                }
+
+                                if (localConcurrentIsWdtRestarted()) return;
+
+                                if (ActiveFilters.Any())
+                                {
+                                    predicates.AddRange(
+                                        ActiveFilters.Values
+                                        .Select(_ => _.GetCustomAttribute<WhereAttribute>()?.Expr)
+                                        .Where(_ => !string.IsNullOrWhiteSpace(_))
+                                        .Select(_ => $"({_})"));// Add parentheses out of an abundance of paranoia.
+                                }
+
+                                if (predicates.Any()
+                                    && FilterDB.GetMapping(typeof(T)) is TableMapping map
+                                    && TryGetTable(out var table)
+                                    && TryGetPrimaryKeyProperty(out var pi))
+                                {
+                                    var predicateWhere = string.Join(" AND ", predicates);
+
+                                    // Some predicate or predicates.
+                                    var sql = $"SELECT {pi.Name} FROM {table} WHERE {predicateWhere}";
+
+                                    // [Careful]
+                                    // The staged property must contain EXISTING REFERENCES.
+                                    // The purpose of the query is to obtain the Ids of matches ONLY.
+                                    var ids =
+                                        FilterDB
+                                        .Query(map, sql)
+                                        .Select(_ => pi.GetValue(_)?.ToString())
+                                        .Where(_ => !string.IsNullOrWhiteSpace(_))
+                                        .ToArray(); // For vis
+                                    var pkVisible = new HashSet<string>(ids!);
+
+                                    // What should be visible.
+                                    // This is culled from the ItemsSourceInternal that is the OG
+                                    // authority because it was captured when the first filter came on.
+                                    staged = UnfilteredItems.Where(_ =>
+                                    {
+                                        return
+                                            pi.GetValue(_)?.ToString() is { } id
+                                            && !string.IsNullOrWhiteSpace(id)
+                                            && pkVisible.Contains(id);
+                                    }).ToList();
+                                }
+
+                                if (localConcurrentIsWdtRestarted()) return;
+
+                                // Provide an opportunity for user to 
+                                // 
+                                var e = new BeforeAdaptiveShowAllEventArgs(isEmpty: staged.Count == 0);
+                                BeforeAdaptiveShowAll?.Invoke(this, e);
+                                if (!e.Cancel)
+                                {
+                                    foreach (T item in UnfilteredItemsProtected)
+                                    {
+                                        staged.Add(item);
+                                    }
+                                }
+
+                                stagedPKs =
+                                    staged
+                                    .Select(_ => PrimaryKeyProperty?.GetValue(_)?.ToString())
+                                    .OfType<string>()
+                                    .ToArray();
+                                thisPKs =
+                                    this
+                                    .Select(_ => PrimaryKeyProperty?.GetValue(_)?.ToString())
+                                    .OfType<string>()
+                                    .ToArray();
+
+                            });
+                            if (stagedPKs.SequenceEqual(thisPKs))
+                            {   /* G T K */
+                            }
+                            else
+                            {
+                                // Perform actions only when changes occur.
+                                using (DHostSuspendTracking.GetToken())
+                                {
+                                    base.Clear();
+                                    foreach (var item in staged)
+                                    {
+                                        base.Add(item);
+                                    }
+                                    // [Careful]
+                                    // Remember this must be the Preview subclass.
+                                    // Swallowed otherwise!
+                                    var ePreview = new NotifyPreviewCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+                                    OnCollectionChanged(ePreview);
+                                }
+                                foreach (var context in TrackContexts.Values)
+                                {
+                                    context!.SyncReset();
+                                }
+                                await 
+                                    Task
+                                    .Run(() => Distinctifier.SyncReset())
+                                    .ConfigureAwait(false);
+                                this.OnAwaited();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.RethrowFramework(ex);
+                }
+            }
+            #region L o c a l F x 
+            bool localConcurrentIsWdtRestarted()
+            {
+                bool isWdtRestarted;
+                lock (_lock)
+                {
+                    isWdtRestarted = WDTReconcileFilters.Running;
+                }
+                if (isWdtRestarted)
+                {
+                    Debug.Fail($@"ADVISORY - Expecting this is a rare corner case.");
+                }
+                return isWdtRestarted;
+            }
+            #endregion L o c a l F x
+        }
+        public event EventHandler<BeforeAdaptiveShowAllEventArgs>? BeforeAdaptiveShowAll;
 
         protected virtual void OnItemPropertyChanging(object? sender, PropertyChangingEventArgs e)
         {
@@ -496,6 +524,9 @@ namespace IVSoftware.Portable.Collections.Lists
 
         public int CountUnfiltered => IsFiltering ? UnfilteredItemsProtected.Count : Count;
 
+        /// <summary>
+        /// Transition from false->true will capture recordset.
+        /// </summary>
         public bool IsFiltering
         {
             get => _isFiltering;
@@ -535,7 +566,7 @@ namespace IVSoftware.Portable.Collections.Lists
         public IReadOnlyList<T> UnfilteredItems => UnfilteredItemsProtected;
         protected List<T> UnfilteredItemsProtected { get; } = new();
 
-        WatchdogTimer WDTReconcileFilters
+        public WatchdogTimer WDTReconcileFilters
         {
             get
             {
@@ -544,7 +575,9 @@ namespace IVSoftware.Portable.Collections.Lists
                     _wdtSettle = new WatchdogTimer(
                         defaultInitialAction: () =>
                         {
+#if DEBUG
                             _wdtLog.Add($"251230.A WDTReconcileFilters.InitialAction");
+#endif
                             _awaiter.Wait(0);
                         },
                         defaultCompleteAction: async() =>
@@ -552,7 +585,9 @@ namespace IVSoftware.Portable.Collections.Lists
                             _awaiter.Wait(0);
                             await ReconcileFilters();
                             _awaiter.Release();
+#if DEBUG
                             _wdtLog.Add($"251230.A WDTReconcileFilters.CompleteAction");
+#endif
                         });
                     _wdtSettle.Interval = TimeSpan.FromSeconds(0.1);
                 }

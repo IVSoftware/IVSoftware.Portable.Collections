@@ -1,0 +1,17 @@
+<opv:ModalItemBaseView
+    x:Class="OPC.Preview.Maui.Views.StringView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters"
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable">
+    <!--
+    Has a *default style* for ModalButton, with margins.
+    Responds to Margin in the ModalButton below, *not* the ModalItemBaseView root.
+    -->
+    <opc:ModalButton
+        Text="{Binding .}"
+        FontSize="14"
+        Clicked="OnClicked" />
+</opv:ModalItemBaseView>

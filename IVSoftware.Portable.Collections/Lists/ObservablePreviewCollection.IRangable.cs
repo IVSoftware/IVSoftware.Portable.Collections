@@ -116,7 +116,9 @@ namespace IVSoftware.Portable.Collections.Lists
         {
             NotifyCollectionChangingEventArgs ePre = new (
                 action: NotifyCollectionChangingAction.Add,
-                changedItems: (IList)items);
+                changedItems: (IList)items,
+                index: Count,
+                oldIndex: -1);
             OnCollectionChanging(ePre);
         }
 

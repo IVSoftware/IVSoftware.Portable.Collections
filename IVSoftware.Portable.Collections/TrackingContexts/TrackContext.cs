@@ -12,8 +12,27 @@ using System.Runtime.CompilerServices;
 
 namespace IVSoftware.Portable.Collections.TrackingContexts
 {
-    [DebuggerDisplay("Count={CurrentItemsProtected.Count}")]
-    public class TrackContext<T> : INotifyPropertyChanged
+    /// <summary>
+    /// Maintains a live, property-driven subset of an ObservablePreviewCollection.
+    /// </summary>
+    /// <remarks>
+    /// A TrackContext observes a single property on items of type T and incrementally
+    /// maintains a synchronized subset whose membership is determined by a predicate.
+    /// 
+    /// Membership updates are driven by both collection mutations and item property
+    /// changes, allowing selection state to be modeled in the data layer rather than
+    /// in platform-specific views.
+    /// 
+    /// Track contexts are commonly instantiated implicitly via the [Track] attribute.
+    /// When activated, the owning collection enables the required optimization modes
+    /// and routes item property changes through the tracking pipeline.
+    /// 
+    /// The public snapshot exposed by this type is stable and iteration-safe, providing
+    /// a consistent view of the current logical subset without exposing live mutation.
+    /// </remarks>
+
+    [DebuggerDisplay("{PropertyInfo?.Name} Count={CurrentItemsProtected.Count}")]
+    public class TrackContext<T> : ITrackContext
     {
         public TrackContext(IObservablePreviewCollection owner, string propertyName)
         {
@@ -59,7 +78,7 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                 }
             }
 
-            // These options aren't options anymore.
+            // These options are no longer optional.
             // Set this here, after validation prologue.
             owner.OptimizationMode |= 
                 ListOptimizationMode.UseCacheForContains 
@@ -209,7 +228,6 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
 
         IList _owner;
 
-
         public void ResetSync()
         {
             CurrentItemsProtected.Clear();
@@ -221,7 +239,6 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                 }
             }
         }
-
         public PropertyInfo PropertyInfo
         {
             get => _propertyInfo;
@@ -258,7 +275,6 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
 
         PropertyInfo _propertyInfo = null!;
         Func<T, int> _compiledGetTrackState = null!;
-
 
         /// <summary>
         /// Exposes a stable snapshot of the current selection.
@@ -305,15 +321,15 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                     _currentItemsProtected = new ObservableHashSet<T>();
                     _currentItemsProtected.CollectionChanged += (sender, e) =>
                     {
-                        // [Careful]
-                        // Specifically, do *not* respond to Reset which tends to be circular.
+                        // [Probationary]
+                        // Reset might be circular.
                         switch (e.Action)
                         {
                             case NotifyCollectionChangedAction.Add:
                             case NotifyCollectionChangedAction.Remove:
+                            case NotifyCollectionChangedAction.Reset:
                                 _currentItemsDirty = true;
-                                // WDTSettle.StartOrRestart();
-                                OnPropertyChanged(nameof(CurrentItems));
+                                WDTCurrentItemsChangeSettled.StartOrRestart();
                                 break;
                             default:
                                 break;
@@ -324,6 +340,16 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
             }
         }
         ObservableHashSet<T>? _currentItemsProtected = null;
+
+        public string Modifiers
+        {
+            get
+            {
+                var e = new ModifiersRequestEventArgs();
+                ModifiersRequest?.Invoke(this, e);
+                return string.Join(" | ", e.Modifiers.Select(_ => _.Trim().ToLower()).OrderBy(_ => _));
+            }
+        }
 
         public T[] CurrentItemsB
         {
@@ -337,82 +363,80 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
             }
         }
         T[] _currentItemsB = [];
-#if false
-        /// <summary>
-        /// TrackInversions.
-        /// </summary>
-        protected ObservableHashSet<T> CurrentItemsProtectedB
-        {
-            get
-            {
-                if (_currentItemsProtectedB is null)
-                {
-                    _currentItemsProtectedB = new ObservableHashSet<T>();
-                    _currentItemsProtectedB.CollectionChanged += (sender, e) =>
-                    {
-                        _currentItemsDirty = true;
-                    };
-                }
-                return _currentItemsProtectedB;
-            }
-        }
-        ObservableHashSet<T>? _currentItemsProtectedB = null;
-#endif
 
-        public void ItemPress(T item)
+        public void ItemPressed(T item)
         {
             if (TrackMode != 0)
             {
+                PressedItem = default;
+                if(string.IsNullOrWhiteSpace(Modifiers))
+                {
+                    foreach (var other in CurrentItems)
+                    {
+                        if(!ReferenceEquals(other, item))
+                        {
+                            SetItemState(other, TrackState.None);
+                        }
+                    }
+                }
                 PressedItem = item;
             }
         }
 
-        public void ItemRelease(T item)
+        /// <summary>
+        /// Indicates a pointer up gesture. 
+        /// </summary>
+        /// <remarks>
+        /// If the item being released is the same as the
+        /// captured item pressed then the state will advance.
+        /// </remarks>
+        public void ItemReleased(T? item)
         {
-            PressedItem = default;  // Different than Current!
-            switch (TrackValueDomain)
+            if (PressedItem is null || !ReferenceEquals(PressedItem, item))
             {
-                case TrackValueDomain.Binary:
-                    localItemReleaseBool();
-                    break;
-                case TrackValueDomain.Stateful:
-                    localItemReleaseState();
-                    break;
-                case TrackValueDomain.Incompatible:
-                default:
-
-                    this.ThrowHard<NotSupportedException>($"The {TrackValueDomain.ToFullKey()} case is not supported.");
-                    break;
+                // Null check, but also do not toggle unless pointer
+                // comes up on the same item that it went down on.
+                return;
             }
-            OnPropertyChanged(nameof(CurrentItems));
-
-            #region L o c a l F x 
-            void localItemReleaseState()
+            else
             {
-                var unk = PropertyInfo?.GetValue(item);
-                TrackState oldState;
+                var unk = PropertyInfo?.GetValue(PressedItem);
                 if (unk is not Enum @enum)
                 {
                     // Initial validation will have already
                     // thrown in this case. Just avoid use.
                     return;
                 }
+                TrackState oldState = (TrackState)@enum;
 
-                oldState = (TrackState)@enum;
+                item = PressedItem;
+                PressedItem = default;
+                switch (TrackValueDomain)
+                {
+                    case TrackValueDomain.Binary:
+                        localItemReleaseBool(oldState);
+                        break;
+                    case TrackValueDomain.Stateful:
+                        localItemReleaseState(oldState);
+                        break;
+                    case TrackValueDomain.Incompatible:
+                    default:
+                        this.ThrowHard<NotSupportedException>($"The {TrackValueDomain.ToFullKey()} case is not supported.");
+                        break;
+                }
+                WDTCurrentItemsChangeSettled.StartOrRestart();
+            }
 
+            void localItemReleaseState(TrackState oldState)
+            {
                 var others = CurrentItems.Where(_ => !ReferenceEquals(_, item)).ToArray();
 
                 TrackMode followMode;
-                string modifiers = string.Empty;
                 bool isDemote = false;
                 if (TrackMode == TrackMode.Single)
                 {
-                    var e = new ModifiersRequestEventArgs();
-                    ModifiersRequest?.Invoke(this, e);
-                    modifiers = string.Join(" | ", e.Modifiers.Select(_ => _.Trim().ToLower()).OrderBy(_ => _));
-
                     // Specific modifiers cause temporary elevation.
-                    switch (modifiers)
+                    switch (Modifiers)
                     {
                         case "control":
                             followMode = TrackMode.Multiple;
@@ -504,22 +528,113 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                 // 2. The Primary goes away
                 if (CurrentItemsProtected.Count == 1)
                 {
-                    T item = CurrentItemsProtected.Cast<T>().First();
+                    item = CurrentItemsProtected.Cast<T>().First();
                     if (GetItemState(item) != TrackState.Exclusive)
                     {
                         SetItemState(item, TrackState.Exclusive);
                     }
                 }
-                OnPropertyChanged(nameof(CurrentItems));
+                WDTCurrentItemsChangeSettled.StartOrRestart();
             }
 
-            void localItemReleaseBool()
+            void localItemReleaseBool(TrackState oldState)
             {
                 var next = _compiledGetTrackState(item) == 0 ? 1 : 0;
-                PropertyInfo.SetValue(item, next);
+                PropertyInfo?.SetValue(item, next);
             }
-            #endregion L o c a l F x
         }
+
+        public T? PressedItem
+        {
+            get => _pressedItem;
+            protected set
+            {
+                if (!Equals(_pressedItem, value))
+                {
+                    if(_pressedItem is not null)
+                    {
+                        PropertyInfo?.SetValue(_pressedItem, TrackStateEphemeral.NotPressed);
+                    }
+                    _pressedItem = value;
+                    if (_pressedItem is null)
+                    {
+                        WDTLongPressed.Cancel();
+                    }
+                    else
+                    {
+                        WDTLongPressed.StartOrRestart();
+                    }
+                    OnPropertyChanged();
+                }
+            }
+        }
+        T? _pressedItem = default;
+
+        public WatchdogTimer WDTLongPressed
+        {
+            get
+            {
+                if (_wdtPressed is null)
+                {
+                    _wdtPressed = new WatchdogTimer
+                    {
+                        Interval = TimeSpan.FromSeconds(0.6),
+                    };
+                    _wdtPressed.RanToCompletion += (sender, _) =>
+                    {
+                        var e = new LongPressedEventArgs(PressedItem);
+                        if (e.Item is not null)
+                        {
+                            CancelItemPressed();
+                            LongPressed?.Invoke(this, e);
+                        }
+                    };
+                }
+                return _wdtPressed;
+            }
+        }
+        WatchdogTimer? _wdtPressed = null;
+
+        public WatchdogTimer WDTCurrentItemsChangeSettled
+        {
+            get
+            {
+                if (_wdtCurrentItemsChangeSettled is null)
+                {
+                    _wdtCurrentItemsChangeSettled = new WatchdogTimer(defaultCompleteAction: localOnItemsChangeSettled)
+                    {
+                        Interval = TimeSpan.FromMilliseconds(10)
+                    };
+                }
+                return _wdtCurrentItemsChangeSettled;
+
+                void localOnItemsChangeSettled()
+                {
+                    OnPropertyChanged(nameof(CurrentItems));
+                    OnPropertyChanged(nameof(Count));
+                }
+            }
+        }
+
+        WatchdogTimer? _wdtCurrentItemsChangeSettled = null;
+
+        public event EventHandler<LongPressedEventArgs>? LongPressed;
+
+        public TimeSpan LongPressedDelay
+        {
+            get => WDTLongPressed.Interval;
+            set
+            {
+                if (!Equals(WDTLongPressed.Interval, value) 
+                    && value.TotalSeconds > LONG_PRESSED_MIN_SECONDS)
+                {
+                    WDTLongPressed.Interval = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        const double LONG_PRESSED_MIN_SECONDS = 0.25;
+        public void CancelItemPressed() => PressedItem = default;
 
         TrackState GetItemState(T item) => (TrackState)_compiledGetTrackState(item);
         void SetItemState(T item, TrackState newState)
@@ -562,7 +677,6 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                 }
             }
         }
-
         private void OnConditionChanged()
         {
             var getState = _compiledGetTrackState;
@@ -583,52 +697,20 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
             ResetSync();
         }
 
-
         WherePredicate _condition = (WherePredicate)(-1);
         Func<T, bool> _compiledPredicate = null!;
 
-        public T? PressedItem
-        {
-            get => _pressedItem;
-            set
-            {
-                if (!Equals(_pressedItem, value))
-                {
-                    _pressedItem = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-        T? _pressedItem = default;
-
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        internal void SyncReset() => OnPropertyChanged(nameof(CurrentItems));
+        internal void SyncReset() => WDTCurrentItemsChangeSettled.StartOrRestart();
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler<ModifiersRequestEventArgs>? ModifiersRequest;
 
-        WatchdogTimer WDTSettle
-        {
-            get
-            {
-                if (_wdtSettle is null)
-                {
-                    _wdtSettle = new WatchdogTimer(
-                        defaultInitialAction: () =>
-                    {
-                        throw new NotImplementedException("ToDo");
-                    },
-                    defaultCompleteAction: () =>
-                    {
-                    });
-                    _wdtSettle.Interval = TimeSpan.FromSeconds(0.1);
-                }
-                return _wdtSettle;
-            }
-        }
-        WatchdogTimer? _wdtSettle = null;
-
         internal TrackValueDomain TrackValueDomain { get; }
+
+        public int Count => CurrentItems.Length;
+
+        Array ITrackContext.CurrentItems => CurrentItems;
     }
 }

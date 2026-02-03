@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView 
+    x:Name="@this"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="OPC.Preview.Maui.Views.SelectableQFView"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters"
+    Padding="2,1,2,1">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <conv:SelectionToBackgroundColorConverter
+                x:Key="SelectionToBackgroundColorConverter" />
+            <conv:SelectionToTextColorConverter
+                x:Key="SelectionToTextColorConverter" Pressed="#80000000"/>
+        </ResourceDictionary>
+    </ContentView.Resources>
+    <Border
+        Margin="0,2,0,0"
+        Padding="0,10,0,10"        
+        BackgroundColor="{Binding PressedSelection, Converter={StaticResource SelectionToBackgroundColorConverter}}">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+        </Border.StrokeShape>
+        <Grid
+            x:Name="Grid"
+            RowSpacing="0"
+            ColumnSpacing="0"
+            ColumnDefinitions="0,*" >
+            <opc:GlyphCheckBox
+                x:Name="CheckBox"
+                Grid.Row="0"
+                Grid.Column="0"
+                TextColor="{Binding 
+                    PressedSelection, 
+                    Converter={StaticResource SelectionToTextColorConverter}}"
+                IsVisible="{Binding 
+                    IsCheckBoxVisible, 
+                    Source={x:Reference @this} }"
+                ClickableEventCommand="{Binding 
+                    CheckBoxClickableEventCommand, 
+                    Source={x:Reference @this} }"
+                IsChecked="{Binding IsChecked, Mode=TwoWay}" />
+            <Grid
+                Margin="0"
+                Grid.Column="1"
+                RowDefinitions="*,Auto">
+                <Grid.GestureRecognizers>
+                    <PointerGestureRecognizer
+                            PointerPressed="OnPointerPressed"
+                            PointerMoved="OnPointerMoved"
+                            PointerExited="OnPointerExited"
+                            PointerReleased="OnPointerReleased"/>
+                </Grid.GestureRecognizers>
+                <!--Description-->
+                <Label 
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Text="{Binding Description}" 
+                    TextColor="{Binding PressedSelection, Converter={StaticResource SelectionToTextColorConverter}}"
+                    VerticalTextAlignment="Center"
+                    Margin="4,0,0,3"
+                    FontAttributes="Bold">
+                </Label>
+                <!--Keywords and Tags-->
+                <Grid
+                    IsVisible="{Binding HasKeywordOrTag}"
+                    ColumnDefinitions="Auto,*"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="4,0,0,1">
+                    <Label 
+                        Grid.Column="0" 
+                        Text="{Binding KeywordsDisplay}" 
+                        FontSize="12" 
+                        TextColor="{Binding
+                            PressedSelection, 
+                            Converter={StaticResource SelectionToTextColorConverter},
+                            ConverterParameter='#222222,#F5F5F5'}"/>
+                    <Label 
+                        Grid.Column="1"
+                        Text="{Binding Tags}" 
+                        FontSize="12" 
+                        TextColor="{Binding 
+                            PressedSelection, 
+                            Converter={StaticResource SelectionToTextColorConverter},
+                            ConverterParameter='#222222,#F5F5F5'}"
+                        Margin="5,0,0,0" />
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</ContentView>

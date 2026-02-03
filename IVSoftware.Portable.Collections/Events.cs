@@ -6,7 +6,6 @@ using IVSoftware.Portable.Common.Exceptions;
 
 namespace IVSoftware.Portable.Collections
 {
-
     /// <summary>
     /// Event arguments raised when a property getter resolves to a default 
     /// value for a non-nullable type, indicating an invalid or unintended response.
@@ -46,5 +45,31 @@ namespace IVSoftware.Portable.Collections
         public XElement XKey { get; }
 
         public object? ValueToFormat { get; }
+    }
+
+    /// <summary>
+    /// Opportunity to respond to filter making list empty.
+    /// </summary>
+    public class BeforeAdaptiveShowAllEventArgs : CancelEventArgs
+    {
+        public BeforeAdaptiveShowAllEventArgs(bool isEmpty) : base(cancel: true)
+        {
+            IsEmpty = isEmpty;
+        }
+        public bool IsEmpty { get; }
+    }
+
+    /// <summary>
+    /// Wrap an original (sender, e) pair for purposes of forwarding to container.
+    /// </summary>
+    public class SinkEventWrapper : EventArgs
+    {
+        public SinkEventWrapper(object? sender, EventArgs e)
+        {
+            Sender = sender;
+            EventArgs = e;
+        }
+        public object? Sender { get; }
+        public EventArgs EventArgs { get; }
     }
 }

@@ -117,7 +117,7 @@ public class TestClass_Track
             Assert.IsFalse(
                 opc.IsFiltering,
                 $"Expecting false, because no input has occurred");
-            Assert.AreEqual(0, opc.UnfilteredItems.Count);
+            Assert.HasCount(0, opc.UnfilteredItems);
 
             // Transition: not filtering -> filtering
             // Enter a single character.
@@ -133,11 +133,11 @@ public class TestClass_Track
                 FilteringState.Active,
                 opc.MarkdownContext.FilteringState);
             Assert.IsTrue(opc.IsFiltering);
-            Assert.AreEqual(10, opc.UnfilteredItems.Count);
+            Assert.HasCount(10, opc.UnfilteredItems);
             await opc;
             { }
             // In this case, all match
-            Assert.AreEqual(10, opc.Count);
+            Assert.HasCount(10, opc);
             Assert.AreEqual(0, reconcileCount, "Expecting list is unaltered by this rf.");
             { }
 
@@ -159,7 +159,7 @@ public class TestClass_Track
                 FilteringState.Armed,
                 opc.MarkdownContext.FilteringState);
             Assert.IsFalse(opc.IsFiltering);
-            Assert.AreEqual(0, opc.UnfilteredItems.Count);
+            Assert.HasCount(0, opc.UnfilteredItems);
             { }
 
             opc.MarkdownContext.InputText = "fruit";
@@ -171,10 +171,10 @@ public class TestClass_Track
             actual = JsonConvert.SerializeObject(opc, Formatting.Indented);
             actual.ToClipboardExpected();
             { }
+
             expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -190,7 +190,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -206,7 +205,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""4"",
@@ -222,7 +220,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Strawberry\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""berry\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][berry]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""6"",
@@ -238,7 +235,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Orange\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""citrus\\\"", \\\""orange\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][citrus]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""7"",
@@ -254,7 +250,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Tomato\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""savory\\\""]\"",\r\n  \""Tags\"": \""[fruit][vegetable][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""9"",
@@ -277,9 +272,9 @@ public class TestClass_Track
             );
 
             opc.MarkdownContext.Clear();
-            Assert.AreEqual(
+            Assert.HasCount(
                 10,
-                opc.Count,
+                opc,
                 "Expecting fruits"
             );
         }
@@ -328,7 +323,6 @@ public class TestClass_Track
             expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -344,7 +338,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""6"",
@@ -360,7 +353,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Orange\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""citrus\\\"", \\\""orange\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][citrus]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""9"",
@@ -398,7 +390,6 @@ public class TestClass_Track
             expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -414,7 +405,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""4"",
@@ -430,7 +420,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Strawberry\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""berry\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][berry]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""7"",
@@ -463,7 +452,6 @@ public class TestClass_Track
             expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -479,7 +467,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -495,7 +482,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""4"",
@@ -511,7 +497,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Strawberry\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""berry\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][berry]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""6"",
@@ -527,7 +512,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Orange\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""citrus\\\"", \\\""orange\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce][citrus]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": false,
     ""Id"": ""7"",
@@ -543,7 +527,6 @@ public class TestClass_Track
     ""Properties"": ""{\r\n  \""Description\"": \""Tomato\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""savory\\\""]\"",\r\n  \""Tags\"": \""[fruit][vegetable][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": 0,
     ""IsChecked"": true,
     ""Id"": ""9"",

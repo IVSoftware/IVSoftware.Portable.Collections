@@ -9,6 +9,9 @@ namespace IVSoftware.Portable.Collections.Lists
 
     partial class ObservablePreviewCollection<T>
     {
+        /// <summary>
+        /// Enumerate public properties, adding TrackContexts for decorated properties.
+        /// </summary>
         private void InitializeTrackContexts()
         {
             foreach (var pi in typeof(T).GetProperties())

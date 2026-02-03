@@ -1,7 +1,10 @@
 ﻿using IVSoftware.Portable.Collections.Common;
 using IVSoftware.Portable.Common.Exceptions;
+using IVSoftware.Portable.Disposable;
+using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.Threading;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,7 +12,7 @@ using System.Runtime.CompilerServices;
 
 namespace IVSoftware.Portable.Collections.Lists
 {
-    [DebuggerDisplay("Count={base.Count}")]
+    [DebuggerDisplay("{typeof(T).Name} Count={base.Count}")]
     public partial class ObservablePreviewCollection<T> : IObservablePreviewCollection<T>
     {
         public ObservablePreviewCollection()
@@ -127,7 +130,8 @@ namespace IVSoftware.Portable.Collections.Lists
         {
             NotifyCollectionChangingEventArgs ePre = new (
                 action: NotifyCollectionChangingAction.Add,
-                changedItem: item);
+                changedItem: item,
+                index: Count);
             OnCollectionChanging(ePre);
         }
 
@@ -217,7 +221,6 @@ namespace IVSoftware.Portable.Collections.Lists
             }
         }
         public event NotifyCollectionChangingEventHandler? CollectionChanging;
-
         protected T[] PreChangeSnapshot { get; set; } = [];
         protected virtual void ApplyChanges(NotifyCollectionChangingEventArgs e)
         {
@@ -251,11 +254,15 @@ namespace IVSoftware.Portable.Collections.Lists
             }
 
             int countApplied = 0;
+#if DEBUG
+            int preCount = Count;
+#endif
+
             var action = e.Action.ToBCLAction().AsEnumType<NotifyCollectionChangingAction>();
             object? errorItem;
 
             // Does not have to succeed. Legitimately screens to make
-            // sure a non-T value hasn't been coreced in the handler.
+            // sure a non-T value hasn't been coerced in the handler.
             _ = TryGetSafeBuffer(e.NewItems, out IList<T> newItemsT, out errorItem);
             if (errorItem is not null)
             {
@@ -506,8 +513,155 @@ namespace IVSoftware.Portable.Collections.Lists
             {
                 ManageItemSubscriptions(e);
             }
-            OnCollectionChanged(e.CopyToChangedEvent());
+
+#if DEBUG
+            var postCount = Count;
+            AssertMauiAddContract(
+                e.CopyToChangedEvent(),
+                preCount,
+                postCount);
+#endif
+            var ePost = e.CopyToChangedEvent();
+            if(!DHostUIActivity.IsZero())
+            {
+                OnCollectionChangedInteractively(ePost);
+            }
+            OnCollectionChanged(ePost);
         }
+
+        private void OnCollectionChangedInteractively(NotifyCollectionChangedEventArgs ePost)
+        {
+            if (_markdownContext is null)
+            {
+                return;
+            }
+            else
+            {
+                // Ensure that interactive changes follow the same
+                // state progressions as recordset bulk changes.
+                switch (Count)
+                {
+                    case 0:
+                        // 1. Respond when input text is empty (different - demotes).
+                        switch (_markdownContext.InputText.Length)
+                        {
+                            case 0:
+                                // In particular, demote it from SearchEntryState.Cleared if necessary.
+                                _markdownContext.SetProtectedSearchState(SearchEntryState.Cleared);
+                                break;
+                            default:
+                                break;
+                        }
+                        // 2. Disable filtering unconditionally.
+                        _markdownContext.SetProtectedFilteringState(FilteringState.Ineligible);
+                        break;
+                    case 1:
+                        // 1. Respond when input text is empty (different - promotes).
+                        switch (_markdownContext.InputText.Length)
+                        {
+                            case 0:
+                                // In particular, promote it from SearchEntryState.Cleared if necessary.
+                                _markdownContext.SetProtectedSearchState(SearchEntryState.QueryEmpty);
+                                break;
+                            default:
+                                _markdownContext.SetProtectedSearchState(SearchEntryState.QueryCompleteWithResults);
+                                break;
+                        }
+                        // 2. Disable filtering unconditionally.
+                        _markdownContext.SetProtectedFilteringState(FilteringState.Ineligible);
+                        break;
+                    default:
+                        // 1. Respond when input text is empty (different - promotes).
+                        switch (_markdownContext.InputText.Length)
+                        {
+                            case 0:
+                                // In particular, promote it from SearchEntryState.Cleared if necessary.
+                                _markdownContext.SetProtectedSearchState(SearchEntryState.QueryCompleteWithResults);
+                                break;
+                            default:
+                                break;
+                        }
+                        // 2. Enable filtering conditionally (different).
+                        if (_markdownContext.QueryFilterConfig.HasFlag(QueryFilterConfig.Filter))
+                        {
+                            // ToDo: Compare Items count to UnfilteredItems count
+                            _markdownContext.SetProtectedFilteringState(FilteringState.Armed);
+                        }
+                        else
+                        {
+                            _markdownContext.SetProtectedFilteringState(FilteringState.Ineligible);
+                        }
+                        break;
+                }
+            }
+        }
+
+
+#if false
+        private void UpdateLiveItems(NotifyCollectionChangedEventArgs ePost)
+        {
+            if(MarkdownContext?.QueryFilterConfig.HasFlag(QueryFilterConfig.Filter) == true)
+            {
+                switch (ePost.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        // Use the backing store (MarkdownContextInternal) here.
+                        if (_markdownContext?.FilteringState == FilteringState.Ineligible)
+                        {
+                            // Guarantee that [X] will invoke a filter downgrade.
+                            _markdownContext?.SetProtectedFilteringState(FilteringState.Armed);
+                            Debug.Assert(CountUnfiltered > 0, "Expecting initialization of UnfilteredItems if necessary");
+                        }
+                        // Indicate that there are "query" results in list.
+                        _markdownContext?.SetProtectedSearchState(SearchEntryState.QueryCompleteWithResults);
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        Debug.Fail($@"ADVISORY - First Time.");
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        Debug.Fail($@"ADVISORY - First Time.");
+                        break;
+                }
+            }
+            else
+            {
+                Debug.Fail($@"ADVISORY - First Time.");
+            }
+        }
+        public IReadOnlyCollection<T> LiveItems => _liveItems;
+        List<T> _liveItems { get; } = new();
+#endif
+
+
+#if DEBUG
+        private void AssertMauiAddContract(
+            NotifyCollectionChangedEventArgs e,
+            int preCount,
+            int postCount)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Add)
+                return;
+
+            if (e.NewItems is null)
+                return;
+
+            var addCount = e.NewItems.Count;
+            var index = e.NewStartingIndex;
+
+            // Append case is always safe.
+            if (index == -1)
+                return;
+
+            Debug.Assert(
+                index >= 0 && index <= preCount,
+                $"MAUI Add contract violated: NewStartingIndex={index}, PreCount={preCount}");
+
+            Debug.Assert(
+                index + addCount <= postCount,
+                $"MAUI Add contract violated: Index+Count={index + addCount}, PostCount={postCount}");
+        }
+#endif
+
 
         protected virtual void ApplyRanges(NotifyCollectionChangingEventArgs e)
         {

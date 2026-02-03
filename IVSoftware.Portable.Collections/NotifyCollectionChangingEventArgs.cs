@@ -5,6 +5,7 @@ using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Text;
 
 namespace IVSoftware.Portable.Collections
@@ -29,8 +30,7 @@ namespace IVSoftware.Portable.Collections
 
         public int OldStartingIndex { get; set; } = -1;
 
-        #region C T o r s 
-        #endregion C T o r s
+        #region C T O R S 
         protected NotifyCollectionChangingEventArgs() { }
 
         /// <summary>
@@ -279,6 +279,15 @@ namespace IVSoftware.Portable.Collections
             Action = action;
             switch (action)
             {
+                case NotifyCollectionChangingAction.Add:
+                    NewItems = changedItems;
+                    NewStartingIndex = index;
+                    if(oldIndex != -1)
+                    {
+                        throw new ArgumentException(
+                            $"Unsupported action for multi-item move constructor: {action} with {nameof(oldIndex)} != -1");
+                    }
+                    break;
                 case NotifyCollectionChangingAction.Move:
                     NewItems = changedItems;
                     OldItems = changedItems;
@@ -291,6 +300,7 @@ namespace IVSoftware.Portable.Collections
                         $"Unsupported action for multi-item move constructor: {action}");
             }
         }
+        #endregion C T O R S
 
         public NotifyCollectionChangedEventArgs CopyToChangedEvent()
         {

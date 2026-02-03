@@ -197,6 +197,15 @@ public partial class ObservableDictionary<TKey, TValue>
         }
     }
 
+    /// <summary>
+    /// Subclasses can explicitly raise the CollectionChanging 
+    /// event and skip the default ApplyChanges phase.
+    /// </summary>
+    protected void RaiseCollectionChanging(NotifyCollectionChangingEventArgs e)
+    {
+        _collectionChanging?.Invoke(this, e);
+    }
+
     protected virtual void ApplyChanges(NotifyCollectionChangingEventArgs e)
     {
         var action = e.Action.ToBCLAction().AsEnumType<NotifyCollectionChangingAction>();

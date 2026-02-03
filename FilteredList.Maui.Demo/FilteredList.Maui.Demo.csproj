@@ -38,6 +38,11 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0-ios'">
+	  <CodesignKey>Apple Development: Created via API (7RK5C47358)</CodesignKey>
+	  <CodesignProvision>VS: WildCard Development</CodesignProvision>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -57,20 +62,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Fonts\icon-basics\font\icon-basics.ttf" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiFont Include="Resources\Fonts\icon-basics\font\icon-basics.ttf" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="IVSoftware.Portable.Common" Version="1.0.0-beta" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="IVSoftware.Portable.Disposable" Version="2.0.0" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.20" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
 		<PackageReference Include="IVSoftware.Portable.WatchdogTimer" Version="*" />
-		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="1.0.2-beta" />
+		<PackageReference Include="IVSoftware.Portable.SQLiteMarkdown" Version="1.0.2-rc" />
 	</ItemGroup>
 
 
@@ -84,18 +81,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\IVSoftware.GlyphProvider\IVSoftware.GlyphProvider.Portable\IVSoftware.GlyphProvider.Portable.csproj" />
 	  <ProjectReference Include="..\IVSoftware.Portable.Collections\IVSoftware.Portable.Collections.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Update="Views\ItemCard.xaml.cs">
-	    <DependentUpon>ItemCard.xaml</DependentUpon>
-	  </Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiXaml Update="Views\ItemCard.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
+	  <ProjectReference Include="..\OPC.Preview.Maui\OPC.Preview.Maui.csproj" />
 	</ItemGroup>
 
 

@@ -142,7 +142,16 @@ namespace IVSoftware.Portable
             public Type TValue { get; }
         }
 
-
+        /// <summary>
+        /// Declares an interface as a unilateral contract that may activate
+        /// an alternate runtime type when compatibility is detected.
+        /// </summary> 
+        /// <remarks>
+        /// Unilateral contracts are resolved via runtime reflection.
+        /// For scenarios where contract activation occurs frequently,
+        /// BriskDictionary provides an efficient reflection caching
+        /// substrate and is a natural companion to this pattern.
+        /// </remarks>
         [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
         public class UnilateralContractAttribute : CollectionAttribute
         {
@@ -154,6 +163,7 @@ namespace IVSoftware.Portable
                 KnownCompatibleTypes = knownCompatibleTypes;
             }
             public Type ActivateAsType { get; }
+
             /// <summary>
             /// These types might not be known at compile time
             /// but will be recognized if they present at runtime.

@@ -3,6 +3,7 @@ using IVSoftware.Portable.Collections.Common;
 using IVSoftware.Portable.Collections.Dictionaries;
 using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Common.Exceptions;
+using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.Xml.Linq;
 using System.Collections;
 using System.Collections.Specialized;
@@ -639,6 +640,51 @@ namespace IVSoftware.Portable.Collections
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Retrieve the current Where term from MDC
+        /// </summary>
+        public static string? GetCurrentFilterPredicate(this MarkdownContext? @this)
+        {
+            var preview = @this?.XAST.Attribute(nameof(StdAstAttr.clauseE))?.Value;
+            return preview;
+        }
+        public static string KeywordsEntryToJson(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "[]";
+            }
+
+            IEnumerable<string> tokens;
+
+            if (value.Contains(','))
+            {
+                tokens =
+                    value
+                        .Split(',')
+                        .Select(t => t.Trim())
+                        .Where(t => t.Length != 0);
+            }
+            else
+            {
+                tokens =
+                    value
+                        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(t => t.Trim())
+                        .Where(t => t.Length != 0);
+            }
+
+            return $"[{string.Join(",", tokens.Select(t => $"\"{t}\""))}]";
+        }
+
+        public static T WithNotifyContainer<T>(
+            this T @this, 
+            IContainerBindingContext container) where T: IContainerBindingContext
+        {
+            @this.ContainerBindingContext = container;
+            return @this;
         }
     }
 }

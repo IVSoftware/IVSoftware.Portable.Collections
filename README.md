@@ -1,8 +1,6 @@
 # 1.0.x-beta
 ___
 
-
-
 ## IVSoftware.Portable.Collections [GitHub](https://github.com/IVSoftware/IVSoftware.Portable.Collections.git)
 
 
@@ -29,6 +27,10 @@ ___
 - Guarantee on-demand activation of missing keys through `InsistentDictionary` semantics.
 - Unify access to layered or multi-source caches with `BriskDictionary`.
 - Reduce UI churn through preview-aware range handling.
+
+### Code Examples
+
+Refer to the [Demos](./IVSoftware.Portable.Collections/README/demos.md) documentation page for information on the code examples available in the project [repo](https://github.com/IVSoftware/IVSoftware.Portable.Collections.git).
 ___
 
 ## What this Package Contains
@@ -543,7 +545,7 @@ Seen from this angle, Brisk's behavior becomes straightforward: one lookup surfa
 ___
 
 ## Appendix: About Exception Handling
-[GitHub](https://github.com/IVSoftware/IVSoftware.Portable.Common.git)
+[IVSoftware.Portable.Common on GitHub](https://github.com/IVSoftware/IVSoftware.Portable.Common.git)
 
 Some examples in this README reference `ThrowHard`, `ThrowSoft`, and `Advisory` from the companion package **IVSoftware.Portable.Common**, which this package already depends on. Its role is to provide a unified signaling model for exceptions and diagnostics in **Release-mode NuGet packages**, giving the End User Developer (EUD) full authority over how faults and messages are interpreted.
 

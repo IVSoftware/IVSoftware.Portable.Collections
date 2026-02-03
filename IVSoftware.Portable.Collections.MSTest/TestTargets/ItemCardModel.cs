@@ -9,24 +9,6 @@ namespace IVSoftware.Portable.Collections.MSTest.TestTargets
 {
     class ItemCardModel : SelectableQFModel, INotifyPropertyChanging
     {
-        public bool ShowCheckboxes
-        {
-            get
-            {
-                var e = new CancelEventArgs();
-                BeforeShowCheckboxes?.Invoke(this, e);
-                if (e.Cancel)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-        }
-
-        public static event CancelEventHandler? BeforeShowCheckboxes;
         public event PropertyChangingEventHandler? PropertyChanging;
 
 

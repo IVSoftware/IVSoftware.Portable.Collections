@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="QueryFilterList.Maui.Demo.MainPage"
+    xmlns:local="clr-namespace:QueryFilterList.Maui.Demo"
+    xmlns:pcl="clr-namespace:QueryFilterList.Portable.Demo;assembly=QueryFilterList.Portable.Demo"
+    xmlns:op="clr-namespace:OPC.Preview.Maui.Resources.Styles;assembly=OPC.Preview.Maui"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    Shell.NavBarIsVisible="false">
+    <ContentPage.BindingContext>
+        <local:MainPageBindingContext x:Name="@binding"/>
+    </ContentPage.BindingContext>
+    <Grid 
+        RowDefinitions="Auto,*,Auto, Auto">
+        <opc:QueryFilterSearchBar
+            x:Name="QueryFilterSearchBar"
+            Grid.Row="0"
+            HeightRequest="{OnPlatform WinUI=40, Android=50, iOS=50, MacCatalyst=50}"
+            MarkdownContext="{Binding Items.MarkdownContext}"
+            Commit="{Binding CommitCommand}" />
+        <CollectionView 
+            x:Name="CV"
+            Grid.Row="1"
+            ItemsSource="{Binding Items}"
+            CanReorderItems="{Binding CanReorderItems}"
+            SelectionMode="None"
+            Scrolled="OnScroll">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <opv:SelectableQFView 
+                        PointerPressedCommand="{Binding
+                                CardPressedCommand, 
+                                Source={x:Reference @binding} }"
+                        PointerMovedCommand="{Binding
+                                PointerMovedCommand, 
+                                Source={x:Reference @binding} }"
+                        PointerExitedCommand="{Binding                  
+                                PointerExitedCommand, 
+                                Source={x:Reference @binding} }"
+                        PointerReleasedCommand="{Binding 
+                                CardReleasedCommand, 
+                                Source={x:Reference @binding} }"
+                        CheckBoxPressedCommand="{Binding 
+                                CardCheckBoxPressedCommand, 
+                                Source={x:Reference @binding} }"
+                        CheckBoxLongPressedCommand="{Binding 
+                                CardCheckBoxLongPressedCommand, 
+                                Source={x:Reference @binding} }"
+                        CheckBoxReleasedCommand="{Binding 
+                                CardCheckBoxReleasedCommand, 
+                                Source={x:Reference @binding} }"
+                        CheckBoxClickableEventCommand="{Binding 
+                                CardCheckBoxClickableEventCommand, 
+                                Source={x:Reference @binding} }"
+                        IsCheckBoxVisible="{Binding 
+                                ShowCheckboxes, 
+                                Source={x:Reference @binding} }" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <opc:CommandBar
+            x:Name="CommandBarModal"
+            Grid.Row="2"
+            TrackContext="{Binding SelectionContext}"
+            HeightRequest="{OnPlatform WinUI=40, Android=50, iOS=50, MacCatalyst=50}"
+            VerticalOptions="End"/>
+        <opc:CommandBar
+            x:Name="CommandBar"
+            Grid.Row="3"
+            TrackContext="{Binding SelectionContext}"
+            HeightRequest="{OnPlatform WinUI=40, Android=50, iOS=50, MacCatalyst=50}"
+            VerticalOptions="End"
+            Configuration="{Binding CommandBarConfig}"
+            ClickableEventCommand="{Binding ClickableEventCommand}" />
+        <opv:ModalCollectionView 
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            MultiConfiguration="{Binding ModalMultiConfiguration}"
+            Settings="{Binding Settings}"
+            ClickableEventCommand="{Binding ClickableEventCommand}" />
+        <opv:PropertyEditorView            
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            IsVisible="{Binding IsPropertyEditorVisible}"
+            Item="{Binding PropertyEditorItem}"
+            ClickableEventCommand="{Binding ClickableEventCommand}" />  
+        <opc:InfoOverlay 
+            x:Name="InfoOverlay"
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            CurrentInfo="{Binding StdAlert}"/>
+        <!-- 
+        [Careful]
+        - Leaving this visible is what caused the notorious Pointer Dead Spot!
+        - Binding just the IsRunning property *appears to* work.
+        - However, it's a SBD bug!
+        -->
+        <ActivityIndicator 
+            IsVisible="{Binding IsBusy}"
+            IsRunning="{Binding IsBusy}"
+            Grid.Row="0"
+            Grid.RowSpan="4"/>
+    </Grid>
+</ContentPage>

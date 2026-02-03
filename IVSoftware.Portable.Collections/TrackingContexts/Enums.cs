@@ -33,6 +33,13 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
         Primary = ItemSelection.Primary,
     }
 
+    [Flags]
+    public enum TrackStateEphemeral
+    {
+        Pressed = 0x10,
+        NotPressed = 0x20,
+    }
+
     /// <summary>
     /// Mode capability.
     /// </summary>

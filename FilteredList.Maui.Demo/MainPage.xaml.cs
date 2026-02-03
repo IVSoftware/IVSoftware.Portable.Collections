@@ -1,22 +1,21 @@
-﻿using FilteredList.Maui.Demo.Models;
-using IVSoftware.Portable.Collections;
-using IVSoftware.Portable.Collections.Lists;
+﻿using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Collections.TrackingContexts;
-using IVSoftware.Portable.SQLiteMarkdown;
 using System.Collections;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using PropertyChangingEventHandler = System.ComponentModel.PropertyChangingEventHandler;
+using System.Collections.Specialized;
+using static IVSoftware.Portable.GlyphProvider;
+using System.Diagnostics;
+
+using OPC.Preview.Portable.Models;
 
 #if WINDOWS
 using Microsoft.UI.Input;
 using Windows.System;
 using Windows.UI.Core;
 #endif
-using PropertyChangingEventHandler = System.ComponentModel.PropertyChangingEventHandler;
-using SelectionMode = Microsoft.Maui.Controls.SelectionMode;
-using System.Collections.Specialized;
 
 namespace FilteredList.Maui.Demo
 {
@@ -25,8 +24,9 @@ namespace FilteredList.Maui.Demo
         public MainPage()
         {
             InitializeComponent();
+#if WINDOWS
             Loaded += (sender, e) => Window!.Title = "Filtered List";
-            foreach (var context in BindingContext.ItemsSource.TrackContexts.Values)
+            foreach (var context in BindingContext.Items.TrackContexts.Values)
             {
                 context!.PropertyChanged += (sender, e) =>
                 {
@@ -35,25 +35,22 @@ namespace FilteredList.Maui.Demo
                         case nameof(context.PressedItem):
                             break;
                         case nameof(context.CurrentItems):
-#if WINDOWS
                             // Win Title Bar Text
                             int
                                 chk = BindingContext.IsCheckedContext.CurrentItems.Length,
-                                chkB = BindingContext.ItemsSource.Count - chk;
+                                chkB = BindingContext.Items.Count - chk;
                             Window!.Title =
                                 $"Sel={BindingContext.SelectionContext.CurrentItems.Length} " +
                                 $"Chk={chk}:{chkB}";
-#endif
-                            switch ((sender as TrackContext<ItemCardModel>)?.PropertyInfo.Name)
-                            {
-                                case nameof(ItemCardModel.IsChecked):
-                                    { }
-                                    break;
-                            }
                             break;
                     }
                 };
             }
+#endif
+            Loaded += (sender, e) =>
+            {
+                BindingContext.PopulateDemoItems();
+            };
         }
         new MainPageBindingContext BindingContext => (MainPageBindingContext)base.BindingContext;
     }
@@ -62,59 +59,71 @@ namespace FilteredList.Maui.Demo
         : INotifyPropertyChanged
         , INotifyPropertyChanging
     {
-        public ICommand ItemPressedCommand { get; }
-        public ICommand ItemReleasedCommand { get; }
         public MainPageBindingContext()
         {
-            ItemPressedCommand = new Command<ItemCardModel>(OnItemPressed);
-            ItemReleasedCommand = new Command<ItemCardModel>(OnItemReleased);
-
-            // Populate demo.
-            foreach (var item in PopulateDemoItems().OfType<ItemCardModel>())
+            CardPressedCommand = new Command<ItemCardModel>(OnItemPressed);
+            CardReleasedCommand = new Command<ItemCardModel>(OnItemReleased);
+            IsCheckedContext.PropertyChanged += (sender, e) =>
             {
-                ItemsSource.Add(item);
+                switch (e.PropertyName)
+                {
+                    case nameof(TrackContext<ItemCardModel>.CurrentItems):
+                        IsCheckboxFilteringEnabled =
+                            IsCheckedContext.CurrentItems.Length == 0
+                            ? false
+                            : IsCheckedContext.CurrentItems.Length == Items.CountUnfiltered
+                                ? false
+                                : true;
+                        break;
+                }
+            };
+        }
+
+        public bool IsCheckboxFilteringEnabled
+        {
+            get => _isCheckboxFilteringEnabled;
+            set
+            {
+                if (!Equals(_isCheckboxFilteringEnabled, value))
+                {
+                    _isCheckboxFilteringEnabled = value;
+                    OnPropertyChanged();
+                }
             }
         }
-        public ObservablePreviewCollection<ItemCardModel> ItemsSource
+        bool _isCheckboxFilteringEnabled = false;
+        public ObservablePreviewCollection<ItemCardModel> Items
         {
             get
             {
-                if (_itemsSource is null)
+                if (_items is null)
                 {
-                    _itemsSource = new ObservablePreviewCollection<ItemCardModel>
+                    _items = new ObservablePreviewCollection<ItemCardModel>
                     {
                         OptimizationMode =
                         ListOptimizationMode.UseCacheForContains
                         | ListOptimizationMode.TrackItemPropertyChanges
                     };
                     OnPropertyChanged();
-
 #if DEBUG
-                    _itemsSource.CollectionChanged += (sender, e) =>
+                    _items.CollectionChanged += (sender, e) =>
                     {
+                        Debug.WriteLine($"260110.A {DateTime.Now:ss.ffff} {e.Action}");
                         switch (e.Action)
                         {
                             case NotifyCollectionChangedAction.Add:
                                 break;
-                            case NotifyCollectionChangedAction.Remove:
-                                break;
-                            case NotifyCollectionChangedAction.Replace:
-                                break;
-                            case NotifyCollectionChangedAction.Move:
-                                break;
                             case NotifyCollectionChangedAction.Reset:
-                                { }
-                                break;
-                            default:
                                 break;
                         }
                     };
 #endif
                 }
-                return _itemsSource;
+
+                return _items;
             }
         }
-        ObservablePreviewCollection<ItemCardModel>? _itemsSource = null;
+        ObservablePreviewCollection<ItemCardModel>? _items = null;
 
         public TrackContext<ItemCardModel> SelectionContext
         {
@@ -122,7 +131,11 @@ namespace FilteredList.Maui.Demo
             {
                 if (_selectionContext is null)
                 {
-                    _selectionContext = ItemsSource.TrackContexts[nameof(ItemCardModel.Selection)]!;
+                    _selectionContext = Items.TrackContexts[nameof(ItemCardModel.Selection)]!;
+                    _selectionContext.LongPressed += (sender, e) =>
+                    {
+                        HideCheckboxes = !HideCheckboxes;
+                    };
                     _selectionContext.ModifiersRequest += (sender, e) =>
                     {
                         var modifiers = new List<string>();
@@ -158,32 +171,56 @@ namespace FilteredList.Maui.Demo
         }
         TrackContext<ItemCardModel>? _selectionContext = null;
 
-        public TrackContext<ItemCardModel> IsCheckedContext 
-            => ItemsSource.TrackContexts[nameof(ItemCardModel.IsChecked)]!;
+        public TrackContext<ItemCardModel> IsCheckedContext
+            => Items.TrackContexts[nameof(ItemCardModel.IsChecked)]!;
 
+
+        public ICommand CardPressedCommand { get; }
         void OnItemPressed(ItemCardModel? item)
         {
-            if(item is not null) SelectionContext.ItemPress(item);
+            if(item is not null) SelectionContext.ItemPressed(item);
         }
 
+        public ICommand CardReleasedCommand { get; }
         void OnItemReleased(ItemCardModel? item)
         {
-            if (item is not null) SelectionContext.ItemRelease(item);
+            if (item is not null) SelectionContext.ItemReleased(item);
         }
 
-        public bool ShowCheckboxes
+        public bool ShowCheckboxes => !HideCheckboxes;
+        public bool HideCheckboxes
         {
-            get => _showCheckboxes;
+            get => _hideCheckboxes;
             set
             {
-                if (!Equals(_showCheckboxes, value))
+                if (!Equals(_hideCheckboxes, value))
                 {
-                    _showCheckboxes = value;
+                    _hideCheckboxes = value;
+                    HideCheckboxesIcon =
+                        _hideCheckboxes 
+                        ? IconBasics.Hidden 
+                        : IconBasics.Shown;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ShowCheckboxes));
+                }
+            }
+        }
+        bool _hideCheckboxes = false;
+
+        public IconBasics HideCheckboxesIcon
+        {
+            get => _HideCheckboxesIcon;
+            set
+            {
+                if (!Equals(_HideCheckboxesIcon, value))
+                {
+                    _HideCheckboxesIcon = value;
                     OnPropertyChanged();
                 }
             }
         }
-        bool _showCheckboxes = true;
+        IconBasics _HideCheckboxesIcon = IconBasics.Shown;
+
 
         public bool ShowChecked
         {
@@ -228,7 +265,7 @@ namespace FilteredList.Maui.Demo
         {
             switch (e.PropertyName)
             {
-                case nameof(ShowCheckboxes):
+                case nameof(HideCheckboxes):
                 case nameof(ShowChecked):
                 case nameof(ShowUnchecked):
                     UpdateCheckboxFilters();
@@ -242,11 +279,11 @@ namespace FilteredList.Maui.Demo
 
         private void UpdateCheckboxFilters()
         {
-            if (ItemsSource is IFilterableCollection filterable)
+            if (Items is IFilterableCollection filterable)
             {
                 using (filterable.BeginFilterAtom())
                 {
-                    if (ShowCheckboxes && (ShowChecked ^ ShowUnchecked))
+                    if (ShowChecked ^ ShowUnchecked)
                     {
                         if (ShowChecked)
                         {
@@ -270,9 +307,9 @@ namespace FilteredList.Maui.Demo
         public event PropertyChangedEventHandler? PropertyChanged;
         public event PropertyChangingEventHandler? PropertyChanging;
 
-        private static IList PopulateDemoItems()
+        internal void PopulateDemoItems()
         {
-            var items = new List<ItemCardModel>();
+            var items = Items;
             int id = 0;
             items.Add(new ItemCardModel
             {
@@ -360,7 +397,6 @@ namespace FilteredList.Maui.Demo
                 Tags = "fruit produce berry",
                 IsChecked = true
             });
-            return items;
         }
     }
 }

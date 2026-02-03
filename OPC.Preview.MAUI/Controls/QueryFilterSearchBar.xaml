@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Name="@this"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="OPC.Preview.Maui.Controls.QueryFilterSearchBar"
+    xmlns:local="clr-namespace:OPC.Preview.Maui.Controls"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"    
+    xmlns:gp="clr-namespace:IVSoftware.Portable;assembly=IVSoftware.GlyphProvider.Portable"
+    xmlns:conv="clr-namespace:OPC.Preview.Maui.Converters">
+    <Grid
+        x:Name="Grid"
+        ColumnDefinitions="Auto,*,Auto"
+        RowDefinitions="*,Auto"
+        ColumnSpacing="0">
+        <opc:GlyphButton
+            Grid.Column="0"
+            Margin="0"
+            FontFamily="icon-basics"
+            Text="{Binding SearchBarIcon}"
+            TextColor="{Binding SearchBarIconColor}"
+            Command="{Binding SearchBarIconTappedCommand}"/>
+        <opc:QueryFilterEntry 
+            x:Name="QueryFilterEntry"
+            Grid.Column="1"
+            Placeholder="{Binding SearchBarPlaceholder}"
+            Margin="{OnPlatform Android='0,5,0,0', WinUI='0'}"
+            Text="{Binding MarkdownContext.InputText, Source={x:Reference @this}, Mode=TwoWay}" />
+        <opc:GlyphButton
+            x:Name="CancelX"
+            Grid.Column="2"
+            Margin="0"
+            Text="X"
+            TextColor="{AppThemeBinding Light=#555555, Dark=#DDDDDD}"
+            HoverColor="#222222"
+            FontSize="18"
+            WidthRequest="50"
+            BorderColor="Transparent"
+            Command="{Binding ClearCommand}">
+        </opc:GlyphButton>
+        <BoxView 
+            Grid.Row="1"
+            Grid.ColumnSpan="3"
+            HeightRequest="1"
+            BackgroundColor="#444444"/>
+    </Grid>
+</ContentView>

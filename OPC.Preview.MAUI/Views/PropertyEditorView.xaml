@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Name="@this"
+    x:Class="OPC.Preview.Maui.Views.PropertyEditorView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pcl="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    xmlns:opcl="clr-namespace:OPC.Preview.Portable;assembly=OPC.Preview.Portable"
+    BackgroundColor="WhiteSmoke"
+    Shell.NavBarIsVisible="false">
+    <Grid>
+        <!--Property editor component-->
+        <opv:ConfigurableCollectionView             
+            VerticalOptions="Start"
+            BackgroundColor="#EEEEEE" 
+            ItemsSource="{Binding
+                PropertyInfoItems,
+                Source={x:Reference @this}}"/>
+        <!--The purpose of the Grid is to provide spacing before the first item and after the last-->
+        <Grid
+            Padding="0,5"
+            BackgroundColor="#222222"
+            VerticalOptions="End">
+
+            <!--Make sure to override the default CommandBar style for BackgroundColor-->
+            <opc:CommandBar
+                x:Name="ModalCommandBarStack"
+                VerticalOptions="Center"
+                Configuration="{x:Type opcl:ApplyCancel}"
+                ChildStyle="{StaticResource ModalGlyphButtonStyle}"
+                MinimumHeightRequest="40"
+                BackgroundColor="Transparent" />
+        </Grid>
+    </Grid>
+</ContentView>

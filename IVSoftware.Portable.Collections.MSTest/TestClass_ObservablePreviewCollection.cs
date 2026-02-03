@@ -284,7 +284,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Alpha""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -297,7 +297,7 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""Alpha""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1
 }
 "
@@ -340,7 +340,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Alpha""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -353,7 +353,7 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""Alpha""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1
 }
 
@@ -365,7 +365,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Bravo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 1,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -378,7 +378,7 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""Bravo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 1,
   ""OldStartingIndex"": -1
 }
 "
@@ -435,7 +435,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Coerced.01""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -447,7 +447,7 @@ A F T E R    C O E R C E    O R    C A N C E L
     ""1/1/1970 12:00:00 AM +00:00 Coerced.01""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -460,7 +460,7 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""1/1/1970 12:00:00 AM +00:00 Coerced.01""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1
 }
 "
@@ -528,7 +528,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -545,7 +545,7 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1
 }
 "
@@ -651,7 +651,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -668,7 +668,7 @@ A F T E R    C O E R C E    O R    C A N C E L
     ""Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": true
 }
@@ -745,7 +745,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -761,7 +761,7 @@ A F T E R    C O E R C E    O R    C A N C E L
     ""1/1/1970 12:00:00 AM +00:00 Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -778,10 +778,11 @@ C O L L E C T I O N    C H A N G E D    E V E N T    B C L
     ""1/1/1970 12:00:00 AM +00:00 Echo""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 0,
   ""OldStartingIndex"": -1
 }
-";
+"
+                    ;
 
                     Assert.AreEqual(
                         expected.NormalizeResult(),
@@ -1320,7 +1321,7 @@ C O L L E C T I O N    C H A N G I N G    E V E N T    B C L
     ""Charlie.Cancel""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 2,
   ""OldStartingIndex"": -1,
   ""Cancel"": false
 }
@@ -1333,7 +1334,7 @@ A F T E R    C O E R C E    O R    C A N C E L
     ""Charlie.Cancel""
   ],
   ""OldItems"": null,
-  ""NewStartingIndex"": -1,
+  ""NewStartingIndex"": 2,
   ""OldStartingIndex"": -1,
   ""Cancel"": true
 }
@@ -3196,7 +3197,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
             expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""None"",
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -3212,7 +3212,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""None"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3228,7 +3227,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""None"",
     ""IsChecked"": false,
     ""Id"": ""2"",
@@ -3280,7 +3278,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Exclusive"",
     ""IsChecked"": false,
     ""Id"": ""2"",
@@ -3318,7 +3315,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Exclusive"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3377,7 +3373,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Exclusive"",
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -3416,7 +3411,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -3432,7 +3426,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Primary"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3470,7 +3463,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -3486,7 +3478,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3502,7 +3493,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Primary"",
     ""IsChecked"": false,
     ""Id"": ""2"",
@@ -3540,7 +3530,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Primary"",
     ""IsChecked"": true,
     ""Id"": ""0"",
@@ -3556,7 +3545,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Apple\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""red\\\"", \\\""sweet\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3572,7 +3560,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": false,
     ""Id"": ""2"",
@@ -3610,7 +3597,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 expected = @" 
 [
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": false,
     ""Id"": ""1"",
@@ -3626,7 +3612,6 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
     ""Properties"": ""{\r\n  \""Description\"": \""Banana\"",\r\n  \""Keywords\"": \""[\\\""fruit\\\"", \\\""yellow\\\"", \\\""soft\\\""]\"",\r\n  \""Tags\"": \""[fruit][produce]\""\r\n}""
   },
   {
-    ""ShowCheckboxes"": true,
     ""Selection"": ""Multi"",
     ""IsChecked"": false,
     ""Id"": ""2"",
@@ -3663,9 +3648,9 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 {
                     controlKey = control;
                     shiftKey = shift;
-                    sc.ItemPress(opc[index]);
-                    Assert.ReferenceEquals(opc[index], sc.PressedItem);
-                    sc.ItemRelease(opc[index]);
+                    sc.ItemPressed(opc[index]);
+                    Assert.AreSame(opc[index], sc.PressedItem);
+                    sc.ItemReleased(opc[index]);
                 }
                 finally
                 {
@@ -3703,6 +3688,7 @@ ThrowHard: RemoveAt | IndexOutOfRangeException
                 ]);
         }
     }
+
     namespace OPC
     {
         enum TestPredicate

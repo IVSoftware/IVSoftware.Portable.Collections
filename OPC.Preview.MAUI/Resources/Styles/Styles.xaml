@@ -1,0 +1,211 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
+    xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    x:Class="OPC.Preview.Maui.Resources.Styles.Styles">
+
+    <Style x:Key="ModalContentBackgroundStyle" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="#B2DFDB"/>
+        <Setter Property="Stroke" Value="Transparent"/>
+        <Setter Property="StrokeThickness" Value="1"/>
+        <Setter Property="StrokeShape">
+            <RoundRectangle CornerRadius="10"/>
+        </Setter>
+        <Setter Property="HorizontalOptions" Value="Fill"/>
+        <Setter Property="VerticalOptions" Value="Center"/>
+    </Style>
+
+    <Style x:Key="CollectionBorderItemStyle" TargetType="Border">
+        <Setter
+            Property="Stroke"
+            Value="{AppThemeBinding Light=#DDDDDD, Dark=#444444}" />
+        <Setter
+            Property="StrokeThickness"
+            Value="1" />
+        <Setter
+            Property="StrokeShape"
+            Value="RoundRectangle 6" />
+        <Setter
+            Property="BackgroundColor"
+            Value="{AppThemeBinding Light=#FAFAFA, Dark=#1E1E1E}" />
+        <Setter
+            Property="MinimumHeightRequest"
+            Value="40" />
+    </Style>
+
+    <Style TargetType="opc:CommandBar">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#EEEEEE, Dark=#444444}" />
+    </Style>
+
+    <Style x:Key="CollectionLabelItemStyle" TargetType="Label">
+        <!--
+        <Setter Property="TextColor" Value="#222222" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="HorizontalTextAlignment" Value="Start" />
+        <Setter Property="Padding" Value="0" />
+        -->
+    </Style>
+
+    <Style TargetType="opc:ModalButton">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#222222, Dark=White}" />
+        <Setter Property="BackgroundColor" Value="#DDDDDD" />
+        <Setter Property="Margin" Value="0,4"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="FontFamily" Value="OpenSansRegular"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="BorderWidth" Value="0"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14,10"/>
+        <Setter Property="MinimumHeightRequest" Value="20"/>
+        <Setter Property="MinimumWidthRequest" Value="44"/>
+        <Setter Property="MaximumWidthRequest" Value="150"/>
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <!-- Gray950 / Gray200 equivalents -->
+                            <Setter Property="TextColor"
+                                Value="{AppThemeBinding Light=#1F1F1F, Dark=#E5E5E5}" />
+                            <!-- Gray200 / Gray600 equivalents -->
+                            <Setter Property="BackgroundColor"
+                                Value="{AppThemeBinding Light=#E5E5E5, Dark=#757575}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver" >
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="Cyan" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="CollectionButtonItemStyle" TargetType="Button" >
+        <Setter Property="TextColor" Value="#222222" />
+    </Style>
+
+    <Style TargetType="opc:GlyphButton">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#222222, Dark=White}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="MinimumHeightRequest" Value="20"/>
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <!-- Gray950 / Gray200 equivalents -->
+                            <Setter Property="TextColor"
+                                Value="{AppThemeBinding Light=#1F1F1F, Dark=#E5E5E5}" />
+                            <!-- Gray200 / Gray600 equivalents -->
+                            <Setter Property="BackgroundColor"
+                                Value="{AppThemeBinding Light=#E5E5E5, Dark=#757575}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="Cyan" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <Style TargetType="opc:GlyphButton" x:Key="ModalGlyphButtonStyle">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#C0F5F5F5, Dark=#222222}" />
+        <Setter Property="BorderWidth" Value="0.5" />
+        <Setter Property="BorderColor" Value="Cyan" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#222222, Dark=White}" />
+        <Setter Property="MinimumHeightRequest" Value="20"/>
+        <Setter Property="MaximumWidthRequest" Value="150"/>
+        <Setter Property="HeightRequest" Value="34" />
+        <Setter Property="WidthTracksHeight" Value="False" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="VerticalOptions" Value="Fill" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <!-- Gray950 / Gray200 equivalents -->
+                            <Setter Property="TextColor"
+                                Value="{AppThemeBinding Light=#1F1F1F, Dark=#E5E5E5}" />
+                            <!-- Gray200 / Gray600 equivalents -->
+                            <Setter Property="BackgroundColor"
+                                Value="{AppThemeBinding Light=#E5E5E5, Dark=#757575}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="Cyan" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <Style TargetType="opc:GlyphButton" x:Key="GroupBoxButtonStyle">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#C0F5F5F5, Dark=#222222}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#222222, Dark=White}" />
+        <Setter Property="MinimumHeightRequest" Value="20"/>
+        <Setter Property="HeightRequest" Value="34" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="VerticalOptions" Value="Fill" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <!-- Gray950 / Gray200 equivalents -->
+                            <Setter Property="TextColor"
+                                Value="{AppThemeBinding Light=#1F1F1F, Dark=#E5E5E5}" />
+                            <!-- Gray200 / Gray600 equivalents -->
+                            <Setter Property="BackgroundColor"
+                                Value="{AppThemeBinding Light=#E5E5E5, Dark=#757575}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="Cyan" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <Style TargetType="opc:GlyphCheckBox">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=#222222, Dark=White}" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="HoverColor" Value="#222222" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="WidthRequest" Value="40" />
+    </Style>
+
+    <Style TargetType="opc:QueryFilterEntry">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#222222}" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light=DarkGray, Dark=LightGray}" />
+    </Style>
+
+    <Style TargetType="opv:OverlayView">
+        <Setter Property="Opacity" Value="0.25" />
+        <Setter Property="BackgroundColor" Value="Black" />
+    </Style>
+
+</ResourceDictionary>
