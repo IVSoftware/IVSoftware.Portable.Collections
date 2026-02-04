@@ -77,7 +77,7 @@ namespace OPC.Preview.Portable
         object? this[Enum key] { get; set; }
         object? this[string key] { get; set; }
     }
-    public interface ISettingsSink
+    public interface IOPSettingsSink
     {
         ISettingsSource? Settings { get; }
     }
@@ -136,6 +136,9 @@ namespace OPC.Preview.Portable
 
     public interface IOPItemEditor
     {
+        /// <summary>
+        /// This can be a Type for a new item, or an instance for an existing item.
+        /// </summary>
         object Item { get; set; }
     }
 }

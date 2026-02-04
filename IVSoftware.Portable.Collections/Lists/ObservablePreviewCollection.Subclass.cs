@@ -15,37 +15,24 @@ namespace IVSoftware.Portable.Collections.Lists
     public partial class ObservablePreviewCollection<T> 
         : ObservableCollection<T>
         , ISuppressibleEventSource
-        , IContainerBindingContext
     {
-        public object? ContainerBindingContext
-        {
-            get => _containerBindingContext;
-            set
-            {
-                if (!Equals(_containerBindingContext, value))
-                {
-                    _containerBindingContext = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-        object? _containerBindingContext = default;
-
-
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             this.OnAwaited();
 
             if (DHostSuppress.IsZero()) // Public, preeminent suppression.
             {
-                switch (e.Action)
+                if (AmbientBindingContext is not null)
                 {
-                    case NotifyCollectionChangedAction.Add:
-                        foreach (var ecc in e.NewItems?.OfType<IContainerBindingContext>() ?? [])
-                        {
-                            ecc.ContainerBindingContext = this;
-                        }
-                        break;
+                    switch (e.Action)
+                    {
+                        case NotifyCollectionChangedAction.Add:
+                            foreach (var abc in e.NewItems?.OfType<IOPAmbientBindingContext>() ?? [])
+                            {
+                                abc.AmbientBindingContext = AmbientBindingContext;
+                            }
+                            break;
+                    }
                 }
                 // UPGRADE 251126
                 if (e is NotifyPreviewCollectionChangedEventArgs)

@@ -17,15 +17,18 @@ namespace OPC.Preview.Portable
         Help,
     }
 
+    /// <summary>
+    /// Group where [+] stays centered regardless of the visibility of other icons.
+    /// </summary>
     public enum EditingCommands
     {
-        [Glyph(typeof(IconBasics), "Add")]
-        [VisibilityPredicate(VisibilityPredicateFlag.Always)]
-        Add,
-
         [Glyph(typeof(IconBasics), "Edit")]
         [VisibilityPredicate(VisibilityPredicateFlag.Single)]
         Edit,
+
+        [Glyph(typeof(IconBasics), "Add")]
+        [VisibilityPredicate(VisibilityPredicateFlag.Always)]
+        Add,
 
         [Glyph(typeof(IconBasics), "Delete")]
         [VisibilityPredicate(VisibilityPredicateFlag.Single | VisibilityPredicateFlag.Multiple)]

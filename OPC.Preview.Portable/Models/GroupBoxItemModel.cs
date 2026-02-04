@@ -1,5 +1,6 @@
 ﻿using IVSoftware.Portable;
 using IVSoftware.Portable.Collections;
+using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Common.Exceptions;
 using IVSoftware.Portable.Xml.Linq;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
@@ -15,7 +16,7 @@ namespace OPC.Preview.Portable.Models
 {
     public class GroupBoxItemModel 
         : INotifyPropertyChanged
-        , IContainerBindingContext
+        , IOPAmbientBindingContext
     {
         public GroupBoxItemModel(
             Enum member,
@@ -42,19 +43,20 @@ namespace OPC.Preview.Portable.Models
             //ReleasedCommand = new CommandPCL(OnReleased);
         }
         IList? _groupItems;
-        public object? ContainerBindingContext
+
+        public object? AmbientBindingContext
         {
-            get => _containerBindingContext;
+            get => _ambientBindingContext;
             set
             {
-                if (!Equals(_containerBindingContext, value))
+                if (!Equals(_ambientBindingContext, value))
                 {
-                    _containerBindingContext = value;
+                    _ambientBindingContext = value;
                     OnPropertyChanged();
                 }
             }
         }
-        object? _containerBindingContext = default;
+        object? _ambientBindingContext = default;
 
         public GroupBoxItemStyle ItemStyle
         {

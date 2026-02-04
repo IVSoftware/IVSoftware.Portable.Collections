@@ -146,7 +146,7 @@ namespace IVSoftware.Portable.Collections
             {
                 return valueT;
             }
-            else if(@this.TryGetHost(out var bdw))
+            else if (@this.TryGetHost(out var bdw))
             {
                 return bdw.@base.SafeAs<TKey, TValue>();
             }
@@ -165,7 +165,8 @@ namespace IVSoftware.Portable.Collections
                 : @this;
 #endif
 
-        [Canonical][return: NotNullIfNotNull(nameof(@this))]
+        [Canonical]
+        [return: NotNullIfNotNull(nameof(@this))]
         public static T? SafeAs<T>(this object? @this) => @this.AsNotNullIfNotNull<T>();
 
         /// <summary>
@@ -464,7 +465,7 @@ namespace IVSoftware.Portable.Collections
         public static T WithCollectionChangingEvent<T>(
             this T @this,
             NotifyCollectionChangingEventHandler onCollectionChanging
-        ) 
+        )
         where T : INotifyCollectionChanging
         {
             @this.CollectionChanging += onCollectionChanging;
@@ -477,7 +478,7 @@ namespace IVSoftware.Portable.Collections
         public static T WithCollectionChangedEvent<T>(
             this T @this,
             NotifyCollectionChangedEventHandler onCollectionChanged
-        ) 
+        )
         where T : INotifyCollectionChanged
         {
             @this.CollectionChanged += onCollectionChanged;
@@ -491,7 +492,7 @@ namespace IVSoftware.Portable.Collections
             this T @this,
             NotifyCollectionChangingEventHandler? onCollectionChanging,
             NotifyCollectionChangedEventHandler? onCollectionChanged
-        ) 
+        )
         where T : INotifyCollectionChanging, INotifyCollectionChanged
         {
             if (onCollectionChanging is not null)
@@ -679,12 +680,28 @@ namespace IVSoftware.Portable.Collections
             return $"[{string.Join(",", tokens.Select(t => $"\"{t}\""))}]";
         }
 
-        public static T WithNotifyContainer<T>(
-            this T @this, 
-            IContainerBindingContext container) where T: IContainerBindingContext
+        /// <summary>
+        /// Yields the ambient binding context referenced by this instance,
+        /// followed by each successive ambient binding context reachable
+        /// through contiguous IOPAmbientBindingContext links.
+        /// </summary>
+        public static IEnumerable<object> EnumerateAmbientAncestors(this IOPAmbientBindingContext start)
         {
-            @this.ContainerBindingContext = container;
-            return @this;
+            object? current = start.AmbientBindingContext;
+
+            while (current is not null)
+            {
+                yield return current;
+
+                if (current is IOPAmbientBindingContext next)
+                {
+                    current = next.AmbientBindingContext;
+                }
+                else
+                {
+                    yield break;
+                }
+            }
         }
     }
 }

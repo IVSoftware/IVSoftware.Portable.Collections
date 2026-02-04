@@ -5,6 +5,7 @@ using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Common.Exceptions;
 using OPC.Preview.Portable;
 using OPC.Preview.Portable.Events;
+using OPC.Preview.Portable.Models;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
@@ -23,6 +24,37 @@ public partial class CommandBar
         IsVisible = VisibleItems.Any();
         NestedClickableEventCommand = new Command<ClickableEventArgs>(OnNestedClickableEvent);
     }
+
+    public CommandBarModel PortableBindingContext
+    {
+        get
+        {
+            if (_portableBindingContext is null)
+            {
+                _portableBindingContext = new CommandBarModel();
+                if (BindingContext is null)
+                {
+                    BindingContextChanged += localOnBindingContextChanged;
+                }
+                else
+                {
+                    _portableBindingContext.AmbientBindingContext = BindingContext;
+                }
+
+                void localOnBindingContextChanged(object? sender, EventArgs e)
+                {
+                    if (BindingContext is not null)
+                    {
+                        BindingContextChanged -= localOnBindingContextChanged;
+                        PortableBindingContext.AmbientBindingContext = BindingContext;
+                    }
+                }
+            }
+            return _portableBindingContext;
+        }
+    }
+    CommandBarModel? _portableBindingContext = null;
+
     internal ICommand NestedClickableEventCommand { get; }
     private void OnNestedClickableEvent(ClickableEventArgs e)
     {

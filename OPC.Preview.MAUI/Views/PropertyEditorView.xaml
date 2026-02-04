@@ -7,6 +7,7 @@
     xmlns:pcl="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
     xmlns:opc="clr-namespace:OPC.Preview.Maui.Controls;assembly=OPC.Preview.Maui"
     xmlns:opv="clr-namespace:OPC.Preview.Maui.Views;assembly=OPC.Preview.Maui"
+    xmlns:opm="clr-namespace:OPC.Preview.Portable.Models;assembly=OPC.Preview.Portable"
     xmlns:opcl="clr-namespace:OPC.Preview.Portable;assembly=OPC.Preview.Portable"
     BackgroundColor="WhiteSmoke"
     Shell.NavBarIsVisible="false">
@@ -15,8 +16,8 @@
         <opv:ConfigurableCollectionView             
             VerticalOptions="Start"
             BackgroundColor="#EEEEEE" 
-            ItemsSource="{Binding
-                PropertyInfoItems,
+            ItemsSource="{Binding 
+                PortableBindingContext.PropertyInfoItems,
                 Source={x:Reference @this}}"/>
         <!--The purpose of the Grid is to provide spacing before the first item and after the last-->
         <Grid
@@ -31,7 +32,13 @@
                 Configuration="{x:Type opcl:ApplyCancel}"
                 ChildStyle="{StaticResource ModalGlyphButtonStyle}"
                 MinimumHeightRequest="40"
-                BackgroundColor="Transparent" />
+                BackgroundColor="Transparent"
+                TrackContext="{Binding 
+                    PortableBindingContext.IsModifiedContext,
+                    Source={x:Reference @this}}"
+                ClickableEventCommand="{Binding
+                    PortableBindingContext.CommandBarClickableEventCommand,
+                    Source={x:Reference @this}}"/>
         </Grid>
     </Grid>
 </ContentView>

@@ -35,7 +35,6 @@ namespace QueryFilterList.Portable.Demo
             // *Not* a good candidate for singleton.
             // This needs to be pushed in and available e.g. for debug init.
             DemoDB = CreateDemoDB();
-
             LoadedCommand = new CommandPCL(OnLoaded);
             SearchBarIconTappedCommand = new CommandPCL(OnSearchBarIconTapped);
             ClickableEventCommand = new CommandPCL<ClickableEventArgs>(OnClickableEvent);
@@ -47,6 +46,103 @@ namespace QueryFilterList.Portable.Demo
                 OnClickableEvent(new ClickableEventArgs(ClickableEventType.Released) { OPID = e.Result});
             };
         }
+
+        public override async Task SinkClickableEvent(object sender, ClickableEventArgs e)
+        {
+            await base.SinkClickableEvent(sender, e);
+            switch (e.EventType)
+            {
+                case ClickableEventType.Pressed:
+                    break;
+                case ClickableEventType.Clicked:
+                    switch (sender)
+                    {
+                        case PropertyEditorModel model:
+                            switch (e.OPID)
+                            {
+                                case ApplyCancel.Apply:
+                                    using (DHostBusy.GetToken())
+                                    using (Items.DHostUIActivity.GetToken())
+                                    {
+                                        if (model.Item is ItemCardModel item)
+                                        {
+                                            switch (ModalStack.Peek())
+                                            {
+                                                case EditingCommands.Add:
+                                                    Items.Add(item);
+                                                    item.Selection = ItemSelection.Exclusive;
+                                                    DemoDB.Insert(item);
+                                                    break;
+                                                case EditingCommands.Edit:
+                                                    var existing = Items.First(i => i.Id == item.Id);
+                                                    if (ReferenceEquals(item, existing))
+                                                    {
+                                                        // WORKS EVERY TIME
+                                                    }
+                                                    else
+                                                    {
+                                                        throw new InvalidOperationException("Expecting reference is equal");
+                                                    }
+                                                    DemoDB.Update(item);
+                                                    break;
+                                                case EditingCommands.Delete:
+                                                    throw new NotImplementedException("ToDo - Action list confirmation of delete.");
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        }
+#if false
+                                        if (e.Sender is IOPItemEditor editor)
+                                        {
+                                            if (editor.Item is ItemCardModel item)
+                                            {
+                                                switch (ModalStack.Peek())
+                                                {
+                                                    case EditingCommands.Add:
+                                                        Items.Add(item);
+                                                        item.Selection = ItemSelection.Exclusive;
+                                                        DemoDB.Insert(item);
+                                                        break;
+                                                    case EditingCommands.Edit:
+                                                        var existing = Items.First(i => i.Id == item.Id);
+                                                        if (ReferenceEquals(item, existing))
+                                                        {
+                                                            // WORKS EVERY TIME
+                                                        }
+                                                        else
+                                                        {
+                                                            throw new InvalidOperationException("Expecting reference is equal");
+                                                        }
+                                                        DemoDB.Update(item);
+                                                        break;
+                                                    case EditingCommands.Delete:
+                                                        throw new NotImplementedException("ToDo");
+                                                        break;
+                                                    default:
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                        PopModalOPID(ApplyCancel.Apply);
+#endif
+                                    }
+                            break;
+                                case ApplyCancel.Cancel:
+                                    break;
+                            }
+                            IsPropertyEditorVisible = false;
+                            break;
+                    }
+                    break;
+                case ClickableEventType.LongPressed:
+                    break;
+                case ClickableEventType.Released:
+                    break;
+                default:
+                    break;
+            }
+        }
         /// <summary>
         /// ItemCardModel
         /// </summary>
@@ -57,6 +153,7 @@ namespace QueryFilterList.Portable.Demo
                 if (_items is null)
                 {
                     _items = new();
+                    _items.AmbientBindingContext = this;
                     _items.PropertyChanged += (sender, eUnk) =>
                     {
                         if (eUnk is ItemPropertyChangedEventArgs e)
@@ -169,7 +266,7 @@ namespace QueryFilterList.Portable.Demo
 
             // For production, display an initial prompt.
 #if DEBUG
-            Debug.Assert(DateTime.Now.Date == new DateTime(2026, 2, 02).Date, "Don't forget disabled");
+            Debug.Assert(DateTime.Now.Date == new DateTime(2026, 2, 04).Date, "Don't forget disabled");
             // StdAlert = StdInfo.InfoTextQueryPrompt;
 #else
             StdAlert = StdInfo.InfoTextQueryPrompt;
@@ -221,44 +318,6 @@ namespace QueryFilterList.Portable.Demo
                             break;
                         case EditingCommands:
                             PushModalOPID(e.OPID);
-                            break;
-                        case ApplyCancel.Apply:
-                            using (DHostBusy.GetToken())
-                            using (Items.DHostUIActivity.GetToken())
-                            {
-                                if (e.Sender is IOPItemEditor editor)
-                                {
-                                    if (editor.Item is ItemCardModel item)
-                                    {
-                                        switch (ModalStack.Peek())
-                                        {
-                                            case EditingCommands.Add:
-                                                Items.Add(item);
-                                                item.Selection = ItemSelection.Exclusive;
-                                                DemoDB.Insert(item);
-                                                break;
-                                            case EditingCommands.Edit:
-                                                var existing = Items.First(i => i.Id == item.Id);
-                                                if(ReferenceEquals(item, existing))
-                                                { 
-                                                    // WORKS EVERY TIME
-                                                }
-                                                else 
-                                                {
-                                                    throw new InvalidOperationException("Expecting reference is equal");
-                                                }
-                                                DemoDB.Update(item);
-                                                break;
-                                            case EditingCommands.Delete:
-                                                throw new NotImplementedException("ToDo");
-                                                break;
-                                            default:
-                                                break;
-                                        }
-                                    }
-                                }
-                                PopModalOPID(ApplyCancel.Apply);
-                            }
                             break;
 
                         case ApplyCancel.Cancel:

@@ -9,7 +9,8 @@ namespace OPC.Preview.Maui.Converters
         private DataTemplate StringViewTemplate { get; } = new(typeof(StringView));
         private DataTemplate GlyphButtonViewTemplate { get; } = new(typeof(GlyphButtonView));
         private DataTemplate GroupBoxViewTemplate { get; } = new(typeof(GroupBoxView));
-        private DataTemplate PropertyViewTemplate { get; } = new(typeof(PropertyView));
+        private DataTemplate GroupBoxItemViewTemplate { get; } = new(typeof(GroupBoxItemView));
+        private DataTemplate PropertyInfoViewTemplate { get; } = new(typeof(PropertyInfoView));
         protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
         {
             switch (item)
@@ -18,7 +19,8 @@ namespace OPC.Preview.Maui.Converters
                 case string: return StringViewTemplate;
                 case GlyphButtonModel: return GlyphButtonViewTemplate;
                 case GroupBoxModel: return GroupBoxViewTemplate;
-                case PropertyInfoModel: return PropertyViewTemplate;
+                case GroupBoxItemModel: return GroupBoxItemViewTemplate;
+                case PropertyInfoModel: return PropertyInfoViewTemplate;
             }
         }
     }

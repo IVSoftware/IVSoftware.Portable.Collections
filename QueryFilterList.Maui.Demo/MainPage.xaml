@@ -84,8 +84,7 @@
             Grid.Row="0"
             Grid.RowSpan="4"
             IsVisible="{Binding IsPropertyEditorVisible}"
-            Item="{Binding PropertyEditorItem}"
-            ClickableEventCommand="{Binding ClickableEventCommand}" />  
+            Item="{Binding PropertyEditorItem}" />  
         <opc:InfoOverlay 
             x:Name="InfoOverlay"
             Grid.Row="0"

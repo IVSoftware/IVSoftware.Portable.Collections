@@ -23,9 +23,7 @@ namespace OPC.Preview.Maui.Views;
 /// </summary>
 public partial class PropertyEditorView
     : ContentView
-    , IOPItemEditor
     , IOPConfigurable
-    , IOPClickable
     , IOPClickableSink
 {
 	public PropertyEditorView()
@@ -39,47 +37,71 @@ public partial class PropertyEditorView
 				case nameof(IsVisible):
 					if (!IsVisible)
 					{
-						OnAppearing(EventArgs.Empty);
+						OnAppearing(e);
 					}
 					break;
 			}
 		};
+		PropertyChanged += (sender, e) =>
+		{
+			switch (e.PropertyName)
+			{
+				case nameof(IsVisible):
+					if (IsVisible)
+					{
+						OnShown(e);
+					}
+					break;
+			}
+		};
+    }
 
-        // No need to make it bindable - this is plumbing not configuration.
-        ModalCommandBarStack.ClickableEventCommand = new Command<ClickableEventArgs>(OnNestedClickableEvent);
-        ModalCommandBarStack.TrackContext = PropertyInfoItems.TrackContexts[nameof(PropertyInfoModel.IsModified)];
-    }
-    private void OnNestedClickableEvent(ClickableEventArgs e)
+    private void OnShown(EventArgs empty)
     {
-        switch (e.EventType)
+        if (PropertyInfoItems.FirstOrDefault() is PropertyInfoModel first)
         {
-            case ClickableEventType.Released:
-                switch (e.OPID)
-                {
-                    case ApplyCancel.Apply:
-                        foreach (var pii in PropertyInfoItems)
-                        {
-                            if(pii.IsModified)
-                            {
-                                pii.Pi.SetValue(Item, pii.Value);
-                                pii.IsModified = false;
-                            }
-                        }
-                        break;
-                }
-                break;
+            first.IsFocused = true;
         }
-        e = new ClickableEventArgs(this, e);
-        ClickableEventCommand?.Execute(e);
     }
+
+    public PropertyEditorModel PortableBindingContext
+    {
+        get
+        {
+            if (_portableBindingContext is null)
+            {
+                _portableBindingContext = new PropertyEditorModel();
+                if (BindingContext is null)
+                {
+                    BindingContextChanged += localOnBindingContextChanged;
+                }
+                else
+                {
+                    _portableBindingContext.AmbientBindingContext = BindingContext;
+                }
+
+                void localOnBindingContextChanged(object? sender, EventArgs e)
+                {
+                    if (BindingContext is not null)
+                    {
+                        BindingContextChanged -= localOnBindingContextChanged;
+                        PortableBindingContext.AmbientBindingContext = BindingContext;
+                    }
+                }
+            }
+            return _portableBindingContext;
+        }
+    }
+
+    PropertyEditorModel? _portableBindingContext = null;
+    public ObservablePreviewCollection<PropertyInfoModel> PropertyInfoItems => PortableBindingContext.PropertyInfoItems;
+
 
     protected virtual void OnAppearing(EventArgs empty)
     {
-        bool isFirst = true;
         foreach (var pii in PropertyInfoItems)
         {
-            pii.IsFirst = isFirst;
-            isFirst = false;
+            pii.IsFocused = false;
             pii.IsModified = false;
         }
     }
@@ -95,6 +117,7 @@ public partial class PropertyEditorView
             {
                 if (bindable is PropertyEditorView @this)
                 {
+                    @this.PortableBindingContext.Item = newValue;
                     switch (newValue)
                     {
                         case Type configuration:
@@ -121,8 +144,6 @@ public partial class PropertyEditorView
         get => (object)GetValue(ItemProperty);
         set => SetValue(ItemProperty, value);
     }
-
-    public ObservablePreviewCollection<PropertyInfoModel> PropertyInfoItems { get; } = new();
 
     /// <summary>
     /// Type-based configuration that is very different from
@@ -315,58 +336,4 @@ public partial class PropertyEditorView
     {
 		e.Visited.AddDistinct(this);
     }
-
-    #region C L I C K A B L E 
-    public static readonly BindableProperty ClickableEventCommandProperty =
-            BindableProperty.Create(
-                propertyName: nameof(ClickableEventCommand),
-                returnType: typeof(ICommand),
-                declaringType: typeof(PropertyEditorView),
-                defaultValue: default,
-                defaultBindingMode: BindingMode.OneWay,
-                propertyChanged: (bindable, oldValue, newValue) =>
-                {
-                    if (bindable is PropertyEditorView @this)
-                    {
-                        // Do something with @this.ClickableEventCommand
-                    }
-                });
-
-    public ICommand ClickableEventCommand
-    {
-        get => (ICommand)GetValue(ClickableEventCommandProperty);
-        set => SetValue(ClickableEventCommandProperty, value);
-    }
-
-    public event EventHandler? Clicked;
-    public event EventHandler? Pressed;
-    public event EventHandler? LongPressed;
-    public event EventHandler? Released;
-
-    public async Task PerformClickableEvent(object sender, ClickableEventArgs e)
-    {
-        await e;
-        if (!e.Handled)
-        {
-            switch (e.EventType)
-            {
-                case ClickableEventType.Pressed:
-                    Pressed?.Invoke(this, e);
-                    break;
-                case ClickableEventType.Clicked:
-                    Clicked?.Invoke(this, e);
-                    break;
-                case ClickableEventType.LongPressed:
-                    LongPressed?.Invoke(this, e);
-                    break;
-                case ClickableEventType.Released:
-                    Released?.Invoke(this, e);
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    #endregion C L I C K A B L E
-
 }

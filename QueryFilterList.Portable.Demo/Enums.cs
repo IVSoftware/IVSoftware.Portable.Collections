@@ -36,7 +36,7 @@ Long press the checkbox to see additional options.
 
         [InfoText(message: @"
 # Filter Cleared
-- Enter characters to filter the current list.
+- Enter text to filter the current list.
 💡Tap [X] again to exit filter.")]
         FilterClearPrompt,
 

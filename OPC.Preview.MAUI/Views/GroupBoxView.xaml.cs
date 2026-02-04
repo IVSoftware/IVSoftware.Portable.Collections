@@ -17,8 +17,8 @@ public partial class GroupBoxView : ContentView
                     GetEffectiveBackgroundColor();
                     break;
             }
-        };        
-	}
+        };
+    }
     private void GetEffectiveBackgroundColor()
     {
         try

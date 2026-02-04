@@ -2,9 +2,9 @@ using OPC.Preview.Portable.Models;
 
 namespace OPC.Preview.Maui.Views;
 
-public partial class PropertyView : ContentView
+public partial class PropertyInfoView : ContentView
 {
-    public PropertyView()
+    public PropertyInfoView()
     {
         InitializeComponent();
         BindingContextChanged += (sender, e) =>

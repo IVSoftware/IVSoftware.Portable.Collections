@@ -16,7 +16,7 @@ namespace OPC.Preview.Maui.Views
     public class ConfigurableCollectionView
         : CollectionView
         , IMultiConfigurable
-        , ISettingsSink
+        , IOPSettingsSink
     {
         public ConfigurableCollectionView()
         {            

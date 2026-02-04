@@ -19,8 +19,8 @@ namespace OPC.Preview.Portable.Models
     public class GroupBoxModel
         : ModalItemBaseModel
         , IOPConfigurable
-        , IContainerBindingContext
-        , ISettingsSink
+        , IOPAmbientBindingContext
+        , IOPSettingsSink
     {
         public static GroupBoxModel Create<T>(
             ISettingsSource? settings = null)
@@ -48,7 +48,7 @@ namespace OPC.Preview.Portable.Models
         public GroupBoxModel(ISettingsSource? settings = null)
         {
             Settings = settings;
-            var i = Items;
+            Items.AmbientBindingContext = this;
         }
         public string GroupName { get; private set; } = string.Empty;
 
@@ -96,19 +96,19 @@ namespace OPC.Preview.Portable.Models
                 }
             }
         }
-        public object? ContainerBindingContext
+        public object? AmbientBindingContext
         {
-            get => _containerBindingContext;
+            get => _ambientBindingContext;
             set
             {
-                if (!Equals(_containerBindingContext, value))
+                if (!Equals(_ambientBindingContext, value))
                 {
-                    _containerBindingContext = value;
+                    _ambientBindingContext = value;
                     OnPropertyChanged();
                 }
             }
         }
-        object? _containerBindingContext = default;
+        object? _ambientBindingContext = default;
 
         ISettingsSource? _settings = null;
 

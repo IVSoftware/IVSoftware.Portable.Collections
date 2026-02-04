@@ -1,6 +1,7 @@
 ﻿using IVSoftware.Portable;
 using IVSoftware.Portable.Collections;
 using IVSoftware.Portable.Collections.Common;
+using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Collections.TrackingContexts;
 using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.SQLiteMarkdown.Common;
@@ -13,7 +14,10 @@ using PropertyChangingEventHandler = System.ComponentModel.PropertyChangingEvent
 namespace OPC.Preview.Portable.Models
 {
     [Table(nameof(ItemCardModel)), EditorTemplate(template: typeof(ItemCardModelEditorConfiguration))]
-    public class ItemCardModel : SelectableQFModel, INotifyPropertyChanging
+    public class ItemCardModel 
+        : SelectableQFModel
+        , INotifyPropertyChanging
+        ,IOPAmbientBindingContext
     {
         /// <summary>
         /// Bindable selection that raises visual state changes for
@@ -118,5 +122,20 @@ namespace OPC.Preview.Portable.Models
         }
 
         public event PropertyChangingEventHandler? PropertyChanging;
+
+        [Ignore]
+        public object? AmbientBindingContext
+        {
+            get => _ambientBindingContext;
+            set
+            {
+                if (!Equals(_ambientBindingContext, value))
+                {
+                    _ambientBindingContext = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        object? _ambientBindingContext = default;
     }
 }

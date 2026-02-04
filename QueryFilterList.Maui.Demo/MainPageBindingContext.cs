@@ -272,6 +272,17 @@ namespace QueryFilterList.Maui.Demo
 #endif
                         e.Modifiers = modifiers.ToArray();
                     };
+#if DEBUG
+                    _selectionContext.PropertyChanged += (sender, e) =>
+                    {
+                        switch (e.PropertyName)
+                        {
+                            case nameof(ITrackContext.CurrentItems):
+                                { }
+                                break;
+                        }
+                    };
+#endif
                 }
                 return _selectionContext;
             }

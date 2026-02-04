@@ -148,4 +148,17 @@ namespace IVSoftware.Portable.Collections.Lists
 
         public Array CurrentItems { get; }
     }
+
+    /// <summary>
+    /// A model that maintains callable access to the ambient context.
+    /// </summary>
+    /// <remarks>
+    /// Subclassed observable collections may implement this interface 
+    /// to maintain container context that might otherwise be lost when
+    /// item views are realized through data templates or selectors.
+    /// </remarks>
+    public interface IOPAmbientBindingContext
+    {
+        object? AmbientBindingContext { get; set; }
+    }
 }

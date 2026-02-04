@@ -1,6 +1,7 @@
 ﻿using IVSoftware.Portable.Collections.Common;
 using IVSoftware.Portable.Collections.Lists;
 using IVSoftware.Portable.Common.Exceptions;
+using IVSoftware.Portable.SQLiteMarkdown;
 using IVSoftware.Portable.SQLiteMarkdown.Collections;
 using IVSoftware.Portable.Xml.Linq.XBoundObject;
 using System.Collections;
@@ -53,7 +54,7 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
 
                 return;
             }
-            // The [Follow] attribute can, for example, invert a bool.
+            // The [Track] attribute can, for example, invert a bool.
             if (PropertyInfo.GetCustomAttribute<TrackAttribute>() is { } attr)
             {
                 TrackMode = attr.Mode;
@@ -321,11 +322,23 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                     _currentItemsProtected = new ObservableHashSet<T>();
                     _currentItemsProtected.CollectionChanged += (sender, e) =>
                     {
-                        // [Probationary]
-                        // Reset might be circular.
                         switch (e.Action)
                         {
                             case NotifyCollectionChangedAction.Add:
+                                switch (TrackMode)
+                                {
+                                    case TrackMode.None:
+                                        break;
+                                    case TrackMode.Single:
+                                        localEnforceSingle();
+                                        break;
+                                    case TrackMode.Multiple:
+                                        localEnforceMultiple();
+                                        break;
+                                }
+                                _currentItemsDirty = true;
+                                WDTCurrentItemsChangeSettled.StartOrRestart();
+                                break;
                             case NotifyCollectionChangedAction.Remove:
                             case NotifyCollectionChangedAction.Reset:
                                 _currentItemsDirty = true;
@@ -334,11 +347,119 @@ namespace IVSoftware.Portable.Collections.TrackingContexts
                             default:
                                 break;
                         }
+
+                        void localEnforceSingle()
+                        {
+                            var newItems = e.NewItems?.OfType<object>().ToArray() ?? [];
+                            if (newItems.Length == 1)
+                            {
+                                var item = newItems[0];
+                                T[] others =
+                                    CurrentItemsProtected
+                                    .Where(_ => !ReferenceEquals(_, item))
+                                    .ToArray();
+                                switch (TrackValueDomain)
+                                {
+                                    case TrackValueDomain.Binary:
+                                        if (PropertyInfo?.GetValue(item) is bool @bool)
+                                        {
+                                            if(@bool)
+                                            {
+                                                foreach (var remove in others)
+                                                {
+                                                    PropertyInfo?.SetValue(remove, false);
+                                                    CurrentItemsProtected.Remove(remove);
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case TrackValueDomain.Stateful:
+                                        if (PropertyInfo?.GetValue(item) is { } compatibleEnum)
+                                        {
+                                            if (others.Length != 0)
+                                            {
+                                                switch ((ItemSelection)compatibleEnum)
+                                                {
+                                                    case ItemSelection.Exclusive:
+                                                        foreach (var remove in others)
+                                                        {
+                                                            PropertyInfo?.SetValue(remove, ItemSelection.None);
+                                                            CurrentItemsProtected.Remove(remove);
+                                                        }
+                                                        break;
+                                                    case ItemSelection.Primary:
+                                                        {
+                                                            foreach (var demote in others)
+                                                            {
+                                                                PropertyInfo?.SetValue(demote, ItemSelection.Multi);
+                                                            }
+                                                        }
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+
+                        void localEnforceMultiple()
+                        {
+                            switch (TrackValueDomain)
+                            {
+                                case TrackValueDomain.Stateful:
+                                    Debug.Fail($@"ADVISORY - First Time. Needs review.");
+                                    // Ensure *programmatic* promotions get handled
+                                    foreach (var item in e.NewItems?.OfType<object>() ?? [])
+                                    {
+                                        if (PropertyInfo?.GetValue(item) is { } compatibleEnum)
+                                        {
+                                            T[] others;
+                                            switch ((ItemSelection)compatibleEnum)
+                                            {
+                                                case ItemSelection.Exclusive:
+                                                case ItemSelection.Primary:
+                                                    others =
+                                                        CurrentItemsProtected
+                                                        .Where(_ => !ReferenceEquals(_, item))
+                                                        .ToArray();
+                                                    break;
+                                                default:
+                                                    others = [];
+                                                    break;
+                                            }
+                                            if (others.Length != 0)
+                                            {
+                                                switch ((ItemSelection)compatibleEnum)
+                                                {
+                                                    case ItemSelection.Exclusive:
+                                                        foreach (var remove in others)
+                                                        {
+                                                            PropertyInfo?.SetValue(remove, ItemSelection.None);
+                                                            CurrentItemsProtected.Remove(remove);
+                                                        }
+                                                        break;
+                                                    case ItemSelection.Primary:
+                                                        {
+                                                            foreach (var demote in others)
+                                                            {
+                                                                PropertyInfo?.SetValue(demote, ItemSelection.Multi);
+                                                            }
+                                                        }
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
                     };
                 }
                 return _currentItemsProtected;
             }
         }
+
         ObservableHashSet<T>? _currentItemsProtected = null;
 
         public string Modifiers

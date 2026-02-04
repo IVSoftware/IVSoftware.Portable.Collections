@@ -81,7 +81,7 @@
 	  <MauiXaml Update="Views\PropertyEditorView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\PropertyView.xaml">
+	  <MauiXaml Update="Views\PropertyInfoView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\SelectableQFView.xaml">
@@ -107,6 +107,9 @@
 	  </Compile>
 	  <Compile Update="Views\ModalCollectionView.xaml.cs">
 	    <DependentUpon>ModalCollectionView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\PropertyInfoView.xaml.cs">
+	    <DependentUpon>PropertyInfoView.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
